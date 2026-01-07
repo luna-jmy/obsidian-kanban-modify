@@ -47,7 +47,7 @@ import { cleanUpTagSortSettings, renderTagSortSettings } from './settings/TagSor
 
 const numberRegEx = /^\d+(?:\.\d+)?$/;
 
-export type KanbanFormat = 'basic' | 'board' | 'table' | 'list';
+export type KanbanFormat = 'basic' | 'board' | 'table' | 'list' | 'eisenhower' | 'gtd';
 
 export interface KanbanSettings {
   [frontmatterKey]?: KanbanFormat;
@@ -90,6 +90,9 @@ export interface KanbanSettings {
   'tag-sort'?: TagSort[];
   'time-format'?: string;
   'time-trigger'?: string;
+  // Eisenhower Matrix & GTD Flow settings
+  'eisenhower-urgent-days'?: number;   // Days threshold for urgent tasks (default: 3)
+  'gtd-auto-tag-update'?: boolean;      // Auto-update tags when dragging in GTD view
 }
 
 export interface KanbanViewSettings {
@@ -138,6 +141,9 @@ export const settingKeyLookup: Set<keyof KanbanSettings> = new Set([
   'tag-sort',
   'time-format',
   'time-trigger',
+  // Eisenhower Matrix & GTD Flow settings
+  'eisenhower-urgent-days',
+  'gtd-auto-tag-update',
 ]);
 
 export type SettingRetriever = <K extends keyof KanbanSettings>(

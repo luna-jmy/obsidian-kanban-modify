@@ -3,6 +3,8 @@ import { KanbanSettings } from 'src/Settings';
 import { Nestable } from 'src/dnd/types';
 import { InlineField } from 'src/parsers/helpers/inlineMetadata';
 import { FileAccessor } from 'src/parsers/helpers/parser';
+import { EisenhowerPriority } from 'src/types/priority';
+import { GTDState } from 'src/types/gtd';
 
 export enum LaneSort {
   TitleAsc,
@@ -75,6 +77,13 @@ export interface ItemMetadata {
   fileMetadata?: FileMetadata;
   fileMetadataOrder?: string[];
   inlineMetadata?: InlineField[];
+  // Eisenhower Matrix & GTD Flow extensions
+  priority?: EisenhowerPriority;  // Task priority for Eisenhower classification
+  taskId?: string;                 // Task ID for dependency tracking
+  dependsOn?: string;              // ID of the task this depends on
+  gtdState?: GTDState;             // GTD state (computed property)
+  isImportant?: boolean;           // Eisenhower: whether task is important
+  isUrgent?: boolean;              // Eisenhower: whether task is urgent
 }
 
 export interface ItemData {

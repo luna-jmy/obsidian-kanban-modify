@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(git -C \"C:\\\\Users\\\\luna\\\\Documents\\\\GitHub\\\\ObsidianTaskMatrix\" log --oneline -10)",
+      "Bash(findstr /i types)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)"
+    ]
+  }
+}
