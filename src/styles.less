@@ -1782,3 +1782,268 @@ body:not(.native-scrollbars) .kanban-plugin__scroll-container::-webkit-scrollbar
     background-color: var(--date-background-color, rgba(var(--mono-rgb-100), 0.05));
   }
 }
+
+// ==========================================
+// Eisenhower Matrix View Styles
+// ==========================================
+
+.kanban-plugin__eisenhower-view {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  padding: var(--size-4-2);
+
+  .kanban-plugin__eisenhower-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: var(--size-4-2);
+    height: 100%;
+    min-height: 600px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      min-height: auto;
+    }
+  }
+}
+
+.kanban-plugin__quadrant-lane {
+  border: 2px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: var(--size-4-2);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-primary);
+  transition: all 0.2s ease;
+  min-height: 250px;
+
+  &:hover {
+    border-color: var(--background-modifier-border-hover);
+  }
+
+  &.kanban-plugin__quadrant-lane-drag-over {
+    border-color: var(--interactive-accent);
+    background-color: var(--background-modifier-hover);
+  }
+
+  // Q1: Important & Urgent - Red theme
+  &.kanban-plugin__quadrant-q1 {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, var(--background-primary) 100%);
+
+    &:hover {
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    .kanban-plugin__quadrant-title {
+      color: rgb(239, 68, 68);
+    }
+  }
+
+  // Q2: Important & Not Urgent - Green theme
+  &.kanban-plugin__quadrant-q2 {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, var(--background-primary) 100%);
+
+    &:hover {
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .kanban-plugin__quadrant-title {
+      color: rgb(34, 197, 94);
+    }
+  }
+
+  // Q3: Not Important & Urgent - Yellow theme
+  &.kanban-plugin__quadrant-q3 {
+    border-color: rgba(234, 179, 8, 0.3);
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, var(--background-primary) 100%);
+
+    &:hover {
+      border-color: rgba(234, 179, 8, 0.5);
+    }
+
+    .kanban-plugin__quadrant-title {
+      color: rgb(234, 179, 8);
+    }
+  }
+
+  // Q4: Not Important & Not Urgent - Gray theme
+  &.kanban-plugin__quadrant-q4 {
+    border-color: rgba(156, 163, 175, 0.3);
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.05) 0%, var(--background-primary) 100%);
+
+    &:hover {
+      border-color: rgba(156, 163, 175, 0.5);
+    }
+
+    .kanban-plugin__quadrant-title {
+      color: rgb(156, 163, 175);
+    }
+  }
+}
+
+.kanban-plugin__quadrant-header {
+  margin-bottom: var(--size-4-2);
+  padding-bottom: var(--size-2-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.kanban-plugin__quadrant-title {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-1);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 var(--size-2-1) 0;
+  line-height: 1.4;
+
+  .kanban-plugin__quadrant-title-text {
+    flex: 1;
+  }
+
+  .kanban-plugin__quadrant-subtitle {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .kanban-plugin__quadrant-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 var(--size-2-1);
+    background-color: var(--background-modifier-border);
+    color: var(--text-normal);
+    border-radius: var(--radius-s);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+.kanban-plugin__quadrant-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.kanban-plugin__quadrant-items {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+
+  // Scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--background-modifier-border);
+    border-radius: var(--radius-s);
+
+    &:hover {
+      background: var(--background-modifier-border-hover);
+    }
+  }
+}
+
+.kanban-plugin__quadrant-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.kanban-plugin__quadrant-empty-text {
+  font-size: 0.875rem;
+}
+
+.kanban-plugin__quadrant-item {
+  position: relative;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  padding: var(--size-2-2);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--background-modifier-border-hover);
+    box-shadow: var(--shadow-s);
+  }
+
+  &.kanban-plugin__quadrant-item-project {
+    border-left: 3px solid var(--interactive-accent);
+  }
+
+  &.kanban-plugin__quadrant-item-blocked {
+    opacity: 0.7;
+  }
+}
+
+.kanban-plugin__priority-badge {
+  position: absolute;
+  top: var(--size-2-1);
+  right: var(--size-2-1);
+  font-size: 1rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.kanban-plugin__blocked-indicator {
+  position: absolute;
+  top: var(--size-2-1);
+  right: var(--size-4-3);
+  font-size: 1rem;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.kanban-plugin__project-indicator {
+  position: absolute;
+  bottom: var(--size-2-1);
+  right: var(--size-2-1);
+  font-size: 0.875rem;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+// Mobile responsive adjustments
+@media (max-width: 768px) {
+  .kanban-plugin__eisenhower-view {
+    padding: var(--size-2-2);
+  }
+
+  .kanban-plugin__eisenhower-grid {
+    gap: var(--size-2-2);
+  }
+
+  .kanban-plugin__quadrant-lane {
+    min-height: 200px;
+  }
+
+  .kanban-plugin__quadrant-title {
+    font-size: 0.875rem;
+  }
+
+  .kanban-plugin__quadrant-description {
+    font-size: 0.75rem;
+  }
+}
+

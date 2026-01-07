@@ -410,6 +410,13 @@ export class KanbanView extends TextFileView implements HoverParent {
                 .setChecked(view === 'list')
                 .onClick(() => this.setView('list'))
             )
+            .addItem((item) =>
+              item
+                .setTitle(t('View as Eisenhower'))
+                .setIcon('lucide-layout-grid')
+                .setChecked(view === 'eisenhower')
+                .onClick(() => this.setView('eisenhower'))
+            )
             .showAtMouseEvent(evt);
         }
       );
