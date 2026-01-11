@@ -1,4 +1,4 @@
-import { RefObject, useContext, useMemo, useRef } from 'preact/compat';
+import { RefObject, useContext, useEffect, useMemo, useRef } from 'preact/compat';
 import { useOnMount } from 'src/components/helpers';
 
 import { ScrollManager } from '../managers/ScrollManager';
@@ -16,6 +16,10 @@ export function Scrollable({ scrollRef, triggerTypes, children }: ScrollContextP
   const parentScrollManager = useContext(ScrollManagerContext);
 
   const managerRef = useRef<ScrollManager>();
+  console.log('[DEBUG] Scrollable: render', {
+    hasDndManager: !!dndManager,
+    hasRef: !!scrollRef.current,
+  });
 
   const scrollManager = useMemo(() => {
     if (dndManager) {
@@ -38,11 +42,33 @@ export function Scrollable({ scrollRef, triggerTypes, children }: ScrollContextP
     return null;
   }, [dndManager, scopeId, scrollRef, triggerTypes, parentScrollManager]);
 
-  useOnMount(
-    [scrollRef],
-    () => managerRef.current?.initNodes(scrollRef.current),
-    () => managerRef.current?.destroy()
-  );
+  useEffect(() => {
+    let frameId: number;
+    let initialized = false;
+
+    const attemptInit = () => {
+      if (initialized) return;
+
+      if (scrollRef.current && managerRef.current) {
+        console.log('[DEBUG] Scrollable: Calling initNodes on manager', {
+          node: scrollRef.current,
+          manager: managerRef.current,
+        });
+        managerRef.current.initNodes(scrollRef.current);
+        initialized = true;
+      } else {
+        // console.log('[DEBUG] Scrollable: Waiting for ref or manager...');
+        frameId = requestAnimationFrame(attemptInit);
+      }
+    };
+
+    attemptInit();
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      managerRef.current?.destroy();
+    };
+  }, [scrollRef, scrollManager]);
 
   if (!scrollManager) {
     return null;

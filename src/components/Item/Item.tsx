@@ -29,6 +29,7 @@ export interface DraggableItemProps {
   itemIndex: number;
   isStatic?: boolean;
   shouldMarkItemsComplete?: boolean;
+  originalPath?: number[];
 }
 
 export interface ItemInnerProps {
@@ -171,7 +172,7 @@ export const DraggableItem = memo(function DraggableItem(props: DraggableItemPro
             measureRef={measureRef}
             id={props.item.id}
             index={itemIndex}
-            data={props.item}
+            data={{ ...props.item, originalPath: innerProps.originalPath }}
           >
             <ItemInner {...innerProps} isMatch={isMatch} searchQuery={search?.query} />
           </Droppable>

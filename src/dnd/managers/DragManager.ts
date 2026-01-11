@@ -89,6 +89,11 @@ export class DragManager {
     this.dragOrigin = { x: e.pageX, y: e.pageY };
     this.dragPosition = { x: e.pageX, y: e.pageY };
     this.dragEntity = this.hitboxEntities.get(id);
+    console.log('[DEBUG] DragManager: dragStart', {
+      id,
+      entityFound: !!this.dragEntity,
+      allIds: Array.from(this.hitboxEntities.keys()),
+    });
     this.dragOriginHitbox = this.dragEntity?.getHitbox();
     this.dragEntityMargin = [
       parseFloat(styles.marginLeft) || 0,

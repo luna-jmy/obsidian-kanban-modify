@@ -78,11 +78,25 @@ export function handleEisenhowerDrop(
       }
     }
   } else {
-    // Remove due date for non-urgent quadrants
-    if (metadata.dateStr || metadata.date) {
-      updatedItem.data!.metadata!.date = undefined;
-      updatedItem.data!.metadata!.dateStr = undefined;
-      title = title.replace(/[📅📆🗓]\uFE0F?\s*\d{4}-\d{2}-\d{2}/gu, '').trim();
+    // For non-urgent quadrants (Q2, Q4)
+    // Only remove the date if it's currently URGENT (conflict)
+    // If the date is already non-urgent (e.g. next month), preserve it.
+    if (metadata.date) {
+      const urgentDays = (stateManager.getSetting('eisenhower-urgent-days') as number) || 3;
+      const mDate = moment.isMoment(metadata.date) ? metadata.date : moment(metadata.date);
+
+      if (mDate.isValid()) {
+        const threeDaysLater = moment().add(urgentDays, 'days').endOf('day');
+        const isActuallyUrgent =
+          mDate.isBefore(threeDaysLater) || mDate.isSame(threeDaysLater, 'day');
+
+        if (isActuallyUrgent) {
+          // It's urgent, but we're in a non-urgent quadrant. Remove the date.
+          updatedItem.data!.metadata!.date = undefined;
+          updatedItem.data!.metadata!.dateStr = undefined;
+          title = title.replace(/[📅📆🗓]\uFE0F?\s*\d{4}-\d{2}-\d{2}/gu, '').trim();
+        }
+      }
     }
   }
 

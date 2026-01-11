@@ -14,12 +14,12 @@ import { t } from 'src/lang/helpers';
 import { DndScope } from '../dnd/components/Scope';
 import { getBoardModifiers } from '../helpers/boardModifiers';
 import { frontmatterKey } from '../parsers/common';
+import { EisenhowerView } from './Eisenhower/EisenhowerView';
 import { Icon } from './Icon/Icon';
 import { Lanes } from './Lane/Lane';
 import { LaneForm } from './Lane/LaneForm';
 import { TableView } from './Table/Table';
 import { KanbanContext, SearchContext } from './context';
-import { EisenhowerView } from './Eisenhower/EisenhowerView';
 import { baseClassName, c, useSearchValue } from './helpers';
 import { DataTypes } from './types';
 
@@ -66,6 +66,7 @@ export const Kanban = ({ view, stateManager }: KanbanProps) => {
   const dateColors = stateManager.useSetting('date-colors');
   const tagColors = stateManager.useSetting('tag-colors');
   const boardView = view.useViewState(frontmatterKey);
+  console.log('[DEBUG] Kanban: boardView value is:', boardView);
 
   const closeLaneForm = useCallback(() => {
     if (boardData?.children.length > 0) {
@@ -265,7 +266,10 @@ export const Kanban = ({ view, stateManager }: KanbanProps) => {
             {boardView === 'table' ? (
               <TableView boardData={boardData} stateManager={stateManager} />
             ) : boardView === 'eisenhower' ? (
-              <EisenhowerView stateManager={stateManager} />
+              <>
+                {console.log('[DEBUG] Kanban: Rendering Eisenhower branch')}
+                <EisenhowerView stateManager={stateManager} />
+              </>
             ) : (
               <ScrollContainer
                 id={view.id}

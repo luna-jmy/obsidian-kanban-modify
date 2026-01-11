@@ -66,38 +66,44 @@ export function EisenhowerLane(props: EisenhowerLaneProps) {
           } as any
         } // Cast to any to avoid strict type checking on custom properties if 'EntityData' is strict
       >
-        <div className={c('lane-content')} ref={laneContentRef}>
-          {/* We need a measure node for Droppable to calculate hitboxes. Usually the content div is enough if it wraps items. */}
-          <div ref={measureRef} style={{ display: 'contents' }}>
-            {/* Droppable provides EntityManagerContext, so we don't need to wrap explicitly */}
-            {lane.children.map((item: any, i) => {
-              // Fix search filtering: Items in Eisenhower view are clones,
-              // so we must match by ID instead of object reference.
-              if (search?.query) {
-                let isMatch = false;
-                search.items.forEach((searchItem) => {
-                  if (searchItem.id === item.id) isMatch = true;
-                });
-                if (!isMatch) return null;
-              }
+        <div
+          className={c('lane-content')}
+          ref={(el) => {
+            // @ts-ignore
+            laneContentRef.current = el;
+            // @ts-ignore
+            measureRef.current = el;
+          }}
+        >
+          {/* Droppable provides EntityManagerContext, so we don't need to wrap explicitly */}
+          {lane.children.map((item: any, i) => {
+            // Fix search filtering: Items in Eisenhower view are clones,
+            // so we must match by ID instead of object reference.
+            if (search?.query) {
+              let isMatch = false;
+              search.items.forEach((searchItem) => {
+                if (searchItem.id === item.id) isMatch = true;
+              });
+              if (!isMatch) return null;
+            }
 
-              // Defensive check for path metadata to prevent rendering crashes
-              if (!item.originalPath || item.originalPath.length < 2) {
-                return null;
-              }
+            // Defensive check for path metadata to prevent rendering crashes
+            if (!item.originalPath || item.originalPath.length < 2) {
+              return null;
+            }
 
-              return (
-                <ExplicitPathContext.Provider key={boardView + item.id} value={item.originalPath}>
-                  <DraggableItem
-                    item={item}
-                    itemIndex={item.originalPath[1]} // Use the REAL index from the original lane
-                    shouldMarkItemsComplete={false}
-                    isStatic={false}
-                  />
-                </ExplicitPathContext.Provider>
-              );
-            })}
-          </div>
+            return (
+              <ExplicitPathContext.Provider key={boardView + item.id} value={item.originalPath}>
+                <DraggableItem
+                  item={item}
+                  itemIndex={item.originalPath[1]} // Use the REAL index from the original lane
+                  shouldMarkItemsComplete={false}
+                  isStatic={false}
+                  originalPath={item.originalPath}
+                />
+              </ExplicitPathContext.Provider>
+            );
+          })}
         </div>
       </Droppable>
     </div>

@@ -18,6 +18,7 @@ interface EisenhowerViewProps {
 }
 
 export function EisenhowerView({ stateManager }: EisenhowerViewProps) {
+  console.log('[DEBUG] EisenhowerView: RENDER TEST - File is updating');
   const boardData = stateManager.useState();
   const { view } = useContext(KanbanContext);
 

@@ -91,8 +91,9 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
         return;
       }
 
-      const dragPath = dragEntity.getPath();
+      const dragPath = dragEntityData.originalPath || dragEntity.getPath();
       const dropPath = dropEntity.getPath();
+      // dragEntityData comes from dragEntity.getData(), so we are good.
       const dragEntityData = dragEntity.getData();
       const dropEntityData = dropEntity.getData();
       const [, sourceFile] = dragEntity.scopeId.split(':::');
@@ -104,6 +105,8 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
       // Handle Eisenhower quadrant/item drops
       const isEisenhowerTarget =
         dropEntityData.type === 'eisenhower-quadrant' || !!dropEntityData.isEisenhower;
+
+      console.log('[DEBUG] DragDropApp: isEisenhowerTarget?', isEisenhowerTarget, dropEntityData);
 
       if (isEisenhowerTarget && dragEntityData.type === DataTypes.Item) {
         // Resolve view and window safely
@@ -122,6 +125,13 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
         // because of the ExplicitPathContext in EisenhowerLane.tsx
         const item = getEntityFromPath(stateManager.state, dragPath) as Item;
         const { isImportant, isUrgent } = dropEntityData;
+
+        console.log('[DEBUG] DragDropApp: Processing Eisenhower drop', {
+          isImportant,
+          isUrgent,
+          dragPath,
+          itemTitle: item?.data?.title,
+        });
 
         if (item) {
           console.log('[Eisenhower Drop] Updating:', item.data?.title?.substring(0, 30));
@@ -332,7 +342,15 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
               if (!view) return [null, null];
 
               const stateManager = plugin.stateManagers.get(view.file);
-              const data = getEntityFromPath(stateManager.state, entity.getPath());
+              // Use originalPath if available (for Eisenhower/virtual items)
+              const path = overlayData.originalPath || entity.getPath();
+              const data = getEntityFromPath(stateManager.state, path);
+              console.log('[DEBUG] DragOverlay:', {
+                overlayData,
+                path,
+                data,
+                state: stateManager.state.children.length,
+              });
               const boardModifiers = getBoardModifiers(view, stateManager);
               const filePath = view.file.path;
 
