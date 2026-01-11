@@ -1,8 +1,11 @@
 import update from 'immutability-helper';
 import { moment } from 'obsidian';
-import { KanbanView } from 'src/KanbanView';
-import { StateManager } from 'src/StateManager';
-import { Path } from 'src/dnd/types';
+
+import { KanbanView } from '../KanbanView';
+import { StateManager } from '../StateManager';
+import { generateInstanceId } from '../components/helpers';
+import { Board, DataTypes, Item, Lane } from '../components/types';
+import { Path } from '../dnd/types';
 import {
   appendEntities,
   getEntityFromPath,
@@ -12,10 +15,7 @@ import {
   removeEntity,
   updateEntity,
   updateParentEntity,
-} from 'src/dnd/util/data';
-
-import { generateInstanceId } from '../components/helpers';
-import { Board, DataTypes, Item, Lane } from '../components/types';
+} from '../dnd/util/data';
 
 export interface BoardModifiers {
   appendItems: (path: Path, items: Item[]) => void;

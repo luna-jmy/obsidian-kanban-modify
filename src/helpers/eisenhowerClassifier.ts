@@ -6,11 +6,22 @@
  * Q4: Not Important & Not Urgent (Don't Do)
  */
 import { moment } from 'obsidian';
-import { EisenhowerPriority, isImportantPriority, mapTasksPriorityToEisenhower, mapIconToEisenhowerPriority } from 'src/types/priority';
 import { Item } from 'src/components/types';
+import {
+  EisenhowerPriority,
+  isImportantPriority,
+  mapIconToEisenhowerPriority,
+  mapTasksPriorityToEisenhower,
+} from 'src/types/priority';
+
+export interface ItemWithPath extends Item {
+  originalPath: number[];
+  isImportant?: boolean;
+  isUrgent?: boolean;
+}
 
 export interface EisenhowerQuadrant {
-  items: Item[];
+  items: ItemWithPath[];
   isImportant: boolean;
   isUrgent: boolean;
 }
@@ -25,11 +36,11 @@ export interface EisenhowerClassification {
 /**
  * Checks if a task is blocked by incomplete dependencies.
  */
-function isTaskBlocked(item: Item, allItems: Item[]): boolean {
+function isTaskBlocked(item: Item, allItems: (Item | ItemWithPath)[]): boolean {
   const dependsOn = item.data.metadata.dependsOn;
   if (!dependsOn) return false;
 
-  return allItems.some(otherItem => {
+  return allItems.some((otherItem) => {
     const otherTaskId = otherItem.data.metadata.taskId;
     return otherTaskId === dependsOn && !otherItem.data.checked;
   });
@@ -41,11 +52,18 @@ function isTaskBlocked(item: Item, allItems: Item[]): boolean {
 function getTaskPriority(item: Item): EisenhowerPriority {
   const metadata = item.data.metadata;
 
+  // Prefer already hydrated priority from metadata
+  if (metadata.priority) {
+    // If it's a numeric string ('0'-'5'), map it
+    if (typeof metadata.priority === 'string' && /^[0-5]$/.test(metadata.priority)) {
+      return mapTasksPriorityToEisenhower(metadata.priority);
+    }
+    return metadata.priority as EisenhowerPriority;
+  }
+
   // First, try to read from inline metadata (priority field)
   if (metadata.inlineMetadata) {
-    const priorityMeta = metadata.inlineMetadata.find(
-      m => m.key.toLowerCase() === 'priority'
-    );
+    const priorityMeta = metadata.inlineMetadata.find((m) => m.key.toLowerCase() === 'priority');
     if (priorityMeta) {
       // Check if it's the tasks plugin priority format (numeric string)
       const mappedPriority = mapTasksPriorityToEisenhower(priorityMeta.value);
@@ -53,7 +71,7 @@ function getTaskPriority(item: Item): EisenhowerPriority {
         return mappedPriority;
       }
       // Try direct enum value match
-      const value = priorityMeta.value.toLowerCase();
+      const value = String(priorityMeta.value).toLowerCase();
       if (value === 'highest' || value === '🔺') return EisenhowerPriority.Highest;
       if (value === 'high' || value === '⏫') return EisenhowerPriority.High;
       if (value === 'medium' || value === '🔼') return EisenhowerPriority.Medium;
@@ -76,14 +94,36 @@ function getTaskPriority(item: Item): EisenhowerPriority {
 }
 
 /**
- * Checks if a task is urgent (due within 3 days).
+ * Checks if a task is urgent (due within 3 days or overdue).
+ * A task is urgent if:
+ * - It has a due date
+ * - The due date is within 3 days from now (including overdue tasks)
  */
 function isTaskUrgent(item: Item): boolean {
   const metadata = item.data.metadata;
-  if (!metadata.date) return false;
 
+  // Use hydrated date (due date)
+  const taskDate = metadata?.date;
+  if (!taskDate) return false;
+
+  const mDate = moment.isMoment(taskDate) ? taskDate : moment(taskDate);
+  if (!mDate.isValid()) return false;
+
+  const now = moment().startOf('day');
   const threeDaysLater = moment().add(3, 'days').endOf('day');
-  return metadata.date.isBefore(threeDaysLater);
+
+  // Any date before or matching three days from now is urgent.
+  // Overdue tasks are always urgent.
+  const isUrgent = mDate.isBefore(threeDaysLater) || mDate.isSame(threeDaysLater, 'day');
+  console.log(
+    `[Eisenhower Urgency] Item: ${item.data.title.substring(
+      0,
+      20
+    )}, Date: ${mDate.format('YYYY-MM-DD')}, Today: ${now.format(
+      'YYYY-MM-DD'
+    )}, Urgent: ${isUrgent}`
+  );
+  return isUrgent;
 }
 
 /**
@@ -94,7 +134,7 @@ function isTaskUrgent(item: Item): boolean {
  * - Blocked tasks are excluded
  * - Tasks are classified by importance (priority) and urgency (due date)
  */
-export function classifyEisenhower(items: Item[]): EisenhowerClassification {
+export function classifyEisenhower(items: (Item | ItemWithPath)[]): EisenhowerClassification {
   const result: EisenhowerClassification = {
     q1: { items: [], isImportant: true, isUrgent: true },
     q2: { items: [], isImportant: true, isUrgent: false },
@@ -116,22 +156,38 @@ export function classifyEisenhower(items: Item[]): EisenhowerClassification {
     const isImportant = isImportantPriority(priority);
     const isUrgent = isTaskUrgent(item);
 
-    // Cache classification results in metadata for later use
-    item.data.metadata.isImportant = isImportant;
-    item.data.metadata.isUrgent = isUrgent;
-    item.data.metadata.priority = priority;
+    // Debug logging
+    console.log('[Eisenhower] Item:', item.data.title.substring(0, 30), {
+      priority,
+      isImportant,
+      isUrgent,
+      hasDate: !!item.data.metadata.date,
+      dateStr: item.data.metadata.dateStr,
+    });
+
+    // Set classification results on the item itself (not metadata, to avoid shared state mutation)
+    const eisenhowerItem = item as ItemWithPath;
+    eisenhowerItem.isImportant = isImportant;
+    eisenhowerItem.isUrgent = isUrgent;
 
     // Classify into appropriate quadrant
     if (isImportant && isUrgent) {
-      result.q1.items.push(item);
+      result.q1.items.push(eisenhowerItem);
     } else if (isImportant && !isUrgent) {
-      result.q2.items.push(item);
+      result.q2.items.push(eisenhowerItem);
     } else if (!isImportant && isUrgent) {
-      result.q3.items.push(item);
+      result.q3.items.push(eisenhowerItem);
     } else {
-      result.q4.items.push(item);
+      result.q4.items.push(eisenhowerItem);
     }
   }
+
+  console.log('[Eisenhower] Classification result:', {
+    q1: result.q1.items.length,
+    q2: result.q2.items.length,
+    q3: result.q3.items.length,
+    q4: result.q4.items.length,
+  });
 
   return result;
 }

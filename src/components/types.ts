@@ -3,8 +3,8 @@ import { KanbanSettings } from 'src/Settings';
 import { Nestable } from 'src/dnd/types';
 import { InlineField } from 'src/parsers/helpers/inlineMetadata';
 import { FileAccessor } from 'src/parsers/helpers/parser';
-import { EisenhowerPriority } from 'src/types/priority';
 import { GTDState } from 'src/types/gtd';
+import { EisenhowerPriority } from 'src/types/priority';
 
 export enum LaneSort {
   TitleAsc,
@@ -78,12 +78,12 @@ export interface ItemMetadata {
   fileMetadataOrder?: string[];
   inlineMetadata?: InlineField[];
   // Eisenhower Matrix & GTD Flow extensions
-  priority?: EisenhowerPriority;  // Task priority for Eisenhower classification
-  taskId?: string;                 // Task ID for dependency tracking
-  dependsOn?: string;              // ID of the task this depends on
-  gtdState?: GTDState;             // GTD state (computed property)
-  isImportant?: boolean;           // Eisenhower: whether task is important
-  isUrgent?: boolean;              // Eisenhower: whether task is urgent
+  priority?: EisenhowerPriority; // Task priority for Eisenhower classification
+  taskId?: string; // Task ID for dependency tracking
+  dependsOn?: string; // ID of the task this depends on
+  gtdState?: GTDState; // GTD state (computed property)
+  isImportant?: boolean; // Eisenhower: whether task is important
+  isUrgent?: boolean; // Eisenhower: whether task is urgent
 }
 
 export interface ItemData {
@@ -96,6 +96,7 @@ export interface ItemData {
   titleSearchRaw: string;
   metadata: ItemMetadata;
   forceEditMode?: boolean;
+  isEisenhower?: boolean; // Eisenhower: flag for view isolation
 }
 
 export interface ErrorReport {
@@ -111,7 +112,11 @@ export interface BoardData {
   errors: ErrorReport[];
 }
 
-export type Item = Nestable<ItemData>;
+export type Item = Nestable<ItemData> & {
+  isEisenhower?: boolean;
+  isImportant?: boolean;
+  isUrgent?: boolean;
+};
 export type Lane = Nestable<LaneData, Item>;
 export type Board = Nestable<BoardData, Lane>;
 export type MetadataSetting = Nestable<DataKey>;

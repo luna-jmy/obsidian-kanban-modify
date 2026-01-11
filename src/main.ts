@@ -202,7 +202,11 @@ export default class KanbanPlugin extends Plugin {
       reg?.viewStateReceivers.push(setState);
 
       return () => {
-        reg?.viewStateReceivers.remove(setState);
+        const receivers = reg?.viewStateReceivers;
+        const index = receivers?.indexOf(setState) ?? -1;
+        if (index > -1) {
+          receivers.splice(index, 1);
+        }
       };
     }, [win]);
 
@@ -705,6 +709,22 @@ export default class KanbanPlugin extends Plugin {
 
         if (view && view instanceof KanbanView) {
           view.setView('list');
+        }
+      },
+    });
+
+    this.addCommand({
+      id: 'view-eisenhower',
+      name: t('View as Eisenhower'),
+      checkCallback: (checking) => {
+        const view = app.workspace.getActiveViewOfType(KanbanView);
+
+        if (checking) {
+          return view && view instanceof KanbanView;
+        }
+
+        if (view && view instanceof KanbanView) {
+          view.setView('eisenhower');
         }
       },
     });

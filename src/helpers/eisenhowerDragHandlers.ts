@@ -3,10 +3,13 @@
  * Handles priority and date updates when items are dragged between quadrants.
  */
 import { moment } from 'obsidian';
-import { EisenhowerPriority, EISENHOWER_PRIORITY_ICON_MAP } from 'src/types/priority';
-import { Item } from 'src/components/types';
 import { StateManager } from 'src/StateManager';
+import { Item } from 'src/components/types';
 import { BoardModifiers } from 'src/helpers/boardModifiers';
+import { Priority } from 'src/parsers/helpers/inlineMetadata';
+import { EISENHOWER_PRIORITY_ICON_MAP, EisenhowerPriority } from 'src/types/priority';
+
+import { ItemWithPath } from './eisenhowerClassifier';
 
 export interface EisenhowerDropData {
   isImportant: boolean;
@@ -29,7 +32,8 @@ export function handleEisenhowerDrop(
   stateManager: StateManager,
   boardModifiers: BoardModifiers
 ): Partial<Item> {
-  const todayStr = moment().format('YYYY-MM-DD');
+  const dateFormat = stateManager.getSetting('date-format') || 'YYYY-MM-DD';
+  const todayStr = moment().format(dateFormat);
   const metadata = item.data.metadata;
 
   // Create updated item data
@@ -43,42 +47,48 @@ export function handleEisenhowerDrop(
     },
   };
 
+  let title = item.data.titleRaw;
+
   // Update priority based on importance
   if (dropData.isImportant) {
     updatedItem.data!.metadata!.priority = EisenhowerPriority.High;
 
     // Add priority emoji to title if not present
-    const hasPriorityEmoji = EISENHOWER_PRIORITY_ICON_MAP[EisenhowerPriority.High];
-    if (!item.data.title.includes('⏫') && !item.data.title.includes('🔺')) {
-      updatedItem.data!.title = `${hasPriorityEmoji} ${item.data.title}`;
+    if (!title.includes('⏫') && !title.includes('🔺')) {
+      title = `⏫ ${title}`;
     }
   } else {
     updatedItem.data!.metadata!.priority = EisenhowerPriority.None;
 
     // Remove priority emoji from title
-    updatedItem.data!.title = item.data.title
-      .replace(/[🔺⏫🔼🔽⏬]\uFE0F?/g, '')
-      .trim();
+    title = title.replace(/[🔺⏫🔼🔽⏬]\uFE0F?/gu, '').trim();
   }
 
   // Update due date based on urgency
   if (dropData.isUrgent) {
-    if (!metadata.date) {
+    if (!metadata.dateStr) {
       // Add today's date if no date exists
       updatedItem.data!.metadata!.date = moment();
       updatedItem.data!.metadata!.dateStr = todayStr;
-      updatedItem.data!.title = `${updatedItem.data!.title} 📅 ${todayStr}`;
+
+      // Avoid doubling if already has a 📅 but no valid dateStr?
+      // Unlikely, but let's be safe.
+      if (!title.match(/[📅📆🗓]/u)) {
+        title = `${title} 📅 ${todayStr}`;
+      }
     }
   } else {
     // Remove due date for non-urgent quadrants
-    if (metadata.date) {
+    if (metadata.dateStr || metadata.date) {
       updatedItem.data!.metadata!.date = undefined;
       updatedItem.data!.metadata!.dateStr = undefined;
-      updatedItem.data!.title = updatedItem.data!.title
-        .replace(/📅\uFE0F?\s*\d{4}-\d{2}-\d{2}/g, '')
-        .trim();
+      title = title.replace(/[📅📆🗓]\uFE0F?\s*\d{4}-\d{2}-\d{2}/gu, '').trim();
     }
   }
+
+  // Update titles
+  updatedItem.data!.title = title;
+  updatedItem.data!.titleRaw = title;
 
   // Update classification metadata
   updatedItem.data!.metadata!.isImportant = dropData.isImportant;
@@ -103,13 +113,19 @@ export function applyEisenhowerUpdate(
   boardModifiers: BoardModifiers
 ) {
   // Update the item title and metadata
-  boardModifiers.updateItem(path, {
-    title: updatedItem.data!.title,
-    titleRaw: updatedItem.data!.titleRaw || item.data.titleRaw,
-    titleSearch: updatedItem.data!.titleSearch || item.data.titleSearch,
-    titleSearchRaw: updatedItem.data!.titleSearchRaw || item.data.titleSearchRaw,
-    metadata: updatedItem.data!.metadata,
-  });
+  const newItem: Item = {
+    ...item,
+    data: {
+      ...item.data,
+      title: updatedItem.data!.title,
+      titleRaw: updatedItem.data!.titleRaw || item.data.titleRaw,
+      titleSearch: updatedItem.data!.titleSearch || item.data.titleSearch,
+      titleSearchRaw: updatedItem.data!.titleSearchRaw || item.data.titleSearchRaw,
+      metadata: updatedItem.data!.metadata,
+    },
+  };
+
+  boardModifiers.updateItem(path, newItem);
 }
 
 /**
@@ -118,9 +134,9 @@ export function applyEisenhowerUpdate(
  * @param item - The item to classify
  * @returns The quadrant key ('q1', 'q2', 'q3', 'q4')
  */
-export function getTargetQuadrant(item: Item): 'q1' | 'q2' | 'q3' | 'q4' {
-  const isImportant = item.data.metadata.isImportant;
-  const isUrgent = item.data.metadata.isUrgent;
+export function getTargetQuadrant(item: Item | ItemWithPath): 'q1' | 'q2' | 'q3' | 'q4' {
+  const isImportant = (item as ItemWithPath).isImportant ?? item.data.metadata.isImportant;
+  const isUrgent = (item as ItemWithPath).isUrgent ?? item.data.metadata.isUrgent;
 
   if (isImportant && isUrgent) return 'q1';
   if (isImportant && !isUrgent) return 'q2';

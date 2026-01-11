@@ -19,6 +19,7 @@ import {
   updateEntity,
 } from './dnd/util/data';
 import { getBoardModifiers } from './helpers/boardModifiers';
+import { applyEisenhowerUpdate, handleEisenhowerDrop } from './helpers/eisenhowerDragHandlers';
 import KanbanPlugin from './main';
 import { frontmatterKey } from './parsers/common';
 import {
@@ -100,10 +101,55 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
       const inDropArea =
         dropEntityData.acceptsSort && !dropEntityData.acceptsSort.includes(dragEntityData.type);
 
+      // Handle Eisenhower quadrant/item drops
+      const isEisenhowerTarget =
+        dropEntityData.type === 'eisenhower-quadrant' || !!dropEntityData.isEisenhower;
+
+      if (isEisenhowerTarget && dragEntityData.type === DataTypes.Item) {
+        // Resolve view and window safely
+        const targetWin = dragEntityData.win || dropEntityData.win || win;
+        const view = plugin.getKanbanView(dragEntity.scopeId, targetWin);
+
+        if (!view) {
+          console.error('[Eisenhower Drop] Could not resolve view for drop.');
+          return;
+        }
+
+        const stateManager = plugin.stateManagers.get(view.file);
+        const boardModifiers = getBoardModifiers(view, stateManager);
+
+        // dragPath should now be the REAL board path [laneIndex, itemIndex]
+        // because of the ExplicitPathContext in EisenhowerLane.tsx
+        const item = getEntityFromPath(stateManager.state, dragPath) as Item;
+        const { isImportant, isUrgent } = dropEntityData;
+
+        if (item) {
+          console.log('[Eisenhower Drop] Updating:', item.data?.title?.substring(0, 30));
+          const updatedItem = handleEisenhowerDrop(
+            item,
+            { isImportant, isUrgent },
+            stateManager,
+            boardModifiers
+          );
+
+          // Apply the update using the actual board path
+          applyEisenhowerUpdate(item, updatedItem, dragPath, boardModifiers);
+        }
+
+        return;
+      }
+
       // Same board
       if (sourceFile === destinationFile) {
-        const view = plugin.getKanbanView(dragEntity.scopeId, dragEntityData.win);
-        const stateManager = plugin.stateManagers.get(view.file);
+        const view = plugin.getKanbanView(dragEntity.scopeId, dragEntityData.win || win);
+        const stateManager = plugin.stateManagers.get(
+          view?.file || plugin.app.workspace.getActiveFile()
+        );
+
+        if (!stateManager) {
+          console.error('[Drop] Could not resolve state manager.');
+          return;
+        }
 
         if (inDropArea) {
           dropPath.push(0);
@@ -111,6 +157,8 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
 
         return stateManager.setState((board) => {
           const entity = getEntityFromPath(board, dragPath);
+          if (!entity) return board;
+
           const newBoard: Board = moveEntity(
             board,
             dragPath,
@@ -182,13 +230,20 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
         });
       }
 
-      const sourceView = plugin.getKanbanView(dragEntity.scopeId, dragEntityData.win);
+      const sourceWin = dragEntityData.win || win;
+      const destWin = dropEntityData.win || win;
+      const sourceView = plugin.getKanbanView(dragEntity.scopeId, sourceWin);
+      const destinationView = plugin.getKanbanView(dropEntity.scopeId, destWin);
+
+      if (!sourceView || !destinationView) return;
+
       const sourceStateManager = plugin.stateManagers.get(sourceView.file);
-      const destinationView = plugin.getKanbanView(dropEntity.scopeId, dropEntityData.win);
       const destinationStateManager = plugin.stateManagers.get(destinationView.file);
 
       sourceStateManager.setState((sourceBoard) => {
         const entity = getEntityFromPath(sourceBoard, dragPath);
+        if (!entity) return sourceBoard;
+
         let replacementEntity: Nestable;
 
         destinationStateManager.setState((destinationBoard) => {
@@ -256,7 +311,7 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
         }
       });
     },
-    [views]
+    [views, win, plugin]
   );
 
   if (portals.length)
@@ -271,8 +326,11 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
               }
 
               const overlayData = entity.getData();
+              const targetWin = overlayData?.win || win;
 
-              const view = plugin.getKanbanView(entity.scopeId, overlayData.win);
+              const view = plugin.getKanbanView(entity.scopeId, targetWin);
+              if (!view) return [null, null];
+
               const stateManager = plugin.stateManagers.get(view.file);
               const data = getEntityFromPath(stateManager.state, entity.getPath());
               const boardModifiers = getBoardModifiers(view, stateManager);
@@ -287,7 +345,7 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
                   filePath,
                 },
               ];
-            }, [entity]);
+            }, [entity, win, plugin]);
 
             if (data?.type === DataTypes.Lane) {
               const boardView =

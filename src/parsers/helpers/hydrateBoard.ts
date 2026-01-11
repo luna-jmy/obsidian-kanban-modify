@@ -1,12 +1,24 @@
 import { moment } from 'obsidian';
-import { StateManager } from 'src/StateManager';
-import { c, escapeRegExpStr, getDateColorFn } from 'src/components/helpers';
-import { Board, DataTypes, DateColor, Item, Lane } from 'src/components/types';
-import { Path } from 'src/dnd/types';
-import { getEntityFromPath } from 'src/dnd/util/data';
-import { Op } from 'src/helpers/patch';
 
-import { getSearchValue } from '../common';
+import { StateManager } from '../../StateManager';
+import { c, escapeRegExpStr, getDateColorFn } from '../../components/helpers';
+import { Board, DataTypes, DateColor, Item, Lane } from '../../components/types';
+import { Path } from '../../dnd/types';
+import { getEntityFromPath } from '../../dnd/util/data';
+import { Priority, getTaskStatusDone, getTaskStatusPreDone } from './inlineMetadata';
+
+// import { getSearchValue } from '../common'; // Removed broken import
+
+function getSearchValue(item: Item, stateManager: StateManager) {
+  return item.data.title.toLowerCase();
+}
+
+export interface Op {
+  op: 'add' | 'replace' | 'remove' | 'move' | 'copy' | 'test';
+  path: Path;
+  value?: any;
+  from?: Path;
+}
 
 export function hydrateLane(stateManager: StateManager, lane: Lane) {
   return lane;
@@ -46,7 +58,13 @@ export function preprocessTitle(stateManager: StateManager, title: string) {
       const linkPath = app.metadataCache.getFirstLinkpathDest(content, stateManager.file.path);
       if (!dateColor) dateColor = getDateColor(parsed);
       const { wrapperClass, wrapperStyle } = getWrapperStyles(c('preview-date-wrapper'));
-      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c('date')} ${c('preview-date-link')}"${wrapperStyle}><a class="${c('preview-date')} internal-link" data-href="${linkPath?.path ?? content}" href="${linkPath?.path ?? content}" target="_blank" rel="noopener">${parsed.format(dateDisplayFormat)}</a></span>`;
+      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c(
+        'date'
+      )} ${c('preview-date-link')}"${wrapperStyle}><a class="${c(
+        'preview-date'
+      )} internal-link" data-href="${linkPath?.path ?? content}" href="${
+        linkPath?.path ?? content
+      }" target="_blank" rel="noopener">${parsed.format(dateDisplayFormat)}</a></span>`;
     }
   );
   title = title.replace(
@@ -58,7 +76,13 @@ export function preprocessTitle(stateManager: StateManager, title: string) {
       const linkPath = app.metadataCache.getFirstLinkpathDest(content, stateManager.file.path);
       if (!dateColor) dateColor = getDateColor(parsed);
       const { wrapperClass, wrapperStyle } = getWrapperStyles(c('preview-date-wrapper'));
-      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c('date')} ${c('preview-date-link')}"${wrapperStyle}><a class="${c('preview-date')} internal-link" data-href="${linkPath?.path ?? content}" href="${linkPath?.path ?? content}" target="_blank" rel="noopener">${parsed.format(dateDisplayFormat)}</a></span>`;
+      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c(
+        'date'
+      )} ${c('preview-date-link')}"${wrapperStyle}><a class="${c(
+        'preview-date'
+      )} internal-link" data-href="${linkPath?.path ?? content}" href="${
+        linkPath?.path ?? content
+      }" target="_blank" rel="noopener">${parsed.format(dateDisplayFormat)}</a></span>`;
     }
   );
   title = title.replace(
@@ -69,7 +93,11 @@ export function preprocessTitle(stateManager: StateManager, title: string) {
       date = parsed;
       if (!dateColor) dateColor = getDateColor(parsed);
       const { wrapperClass, wrapperStyle } = getWrapperStyles(c('preview-date-wrapper'));
-      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c('date')}"${wrapperStyle}><span class="${c('preview-date')} ${c('item-metadata-date')}">${parsed.format(dateDisplayFormat)}</span></span>`;
+      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c(
+        'date'
+      )}"${wrapperStyle}><span class="${c('preview-date')} ${c(
+        'item-metadata-date'
+      )}">${parsed.format(dateDisplayFormat)}</span></span>`;
     }
   );
 
@@ -89,7 +117,11 @@ export function preprocessTitle(stateManager: StateManager, title: string) {
       }
 
       const { wrapperClass, wrapperStyle } = getWrapperStyles(c('preview-time-wrapper'));
-      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c('date')}"${wrapperStyle}><span class="${c('preview-time')} ${c('item-metadata-time')}">${parsed.format(timeFormat)}</span></span>`;
+      return `${space}<span data-date="${date.toISOString()}" class="${wrapperClass} ${c(
+        'date'
+      )}"${wrapperStyle}><span class="${c('preview-time')} ${c(
+        'item-metadata-time'
+      )}">${parsed.format(timeFormat)}</span></span>`;
     }
   );
 
@@ -97,6 +129,9 @@ export function preprocessTitle(stateManager: StateManager, title: string) {
 }
 
 export function hydrateItem(stateManager: StateManager, item: Item) {
+  if (!item.data || !item.data.metadata) {
+    return item;
+  }
   const { dateStr, timeStr, fileAccessor } = item.data.metadata;
 
   if (dateStr) {
@@ -127,6 +162,45 @@ export function hydrateItem(stateManager: StateManager, item: Item) {
 
     if (file) {
       item.data.metadata.file = file;
+    }
+  }
+
+  // Extract Eisenhower priority and due date from emoji in titleRaw
+  const titleRaw = item.data.titleRaw;
+
+  // Extract priority if not already set
+  if (!item.data.metadata.priority) {
+    const priorityRegex = /([🔺⏫🔼🔽⏬])\uFE0F?/u;
+    const match = titleRaw.match(priorityRegex);
+    if (match) {
+      const emoji = match[1];
+      if (emoji === '🔺') item.data.metadata.priority = Priority.Highest as any;
+      else if (emoji === '⏫') item.data.metadata.priority = Priority.High as any;
+      else if (emoji === '🔼') item.data.metadata.priority = Priority.Medium as any;
+      else if (emoji === '🔽') item.data.metadata.priority = Priority.Low as any;
+      else if (emoji === '⏬') item.data.metadata.priority = Priority.Lowest as any;
+    }
+  }
+
+  // Extract date if not already set
+  if (!item.data.metadata.dateStr) {
+    // Look for due date emoji first
+    const dueDateRegex = /[📅📆🗓]\uFE0F? *(\d{4}-\d{2}-\d{2})/u;
+    let match = titleRaw.match(dueDateRegex);
+
+    // Fallback to start/scheduled date if no due date
+    if (!match) {
+      const otherDateRegex = /[🛫⏳⌛]\uFE0F? *(\d{4}-\d{2}-\d{2})/u;
+      match = titleRaw.match(otherDateRegex);
+    }
+
+    if (match) {
+      const dateStr = match[1];
+      item.data.metadata.dateStr = dateStr;
+      item.data.metadata.date = moment(dateStr, [
+        'YYYY-MM-DD',
+        stateManager.getSetting('date-format'),
+      ]);
     }
   }
 

@@ -16,7 +16,27 @@ const en = {
   'View as board': 'View as board',
   'View as list': 'View as list',
   'View as table': 'View as table',
+  'View as Eisenhower': 'View as Eisenhower',
   'Board view': 'Board view',
+
+  // Eisenhower Matrix
+  'Important & Urgent': 'Important & Urgent',
+  'Important & Not Urgent': 'Important & Not Urgent',
+  'Not Important & Urgent': 'Not Important & Urgent',
+  'Not Important & Not Urgent': 'Not Important & Not Urgent',
+  'Do First': 'Do First',
+  Schedule: 'Schedule',
+  Delegate: 'Delegate',
+  "Don't Do": "Don't Do",
+  'High priority': 'High priority',
+  'Normal priority': 'Normal priority',
+  'Due within': 'Due within',
+  days: 'days',
+  'No urgent deadline': 'No urgent deadline',
+  'High priority + Due within {{days}} days': 'High priority + Due within {{days}} days',
+  'High priority + No urgent deadline': 'High priority + No urgent deadline',
+  'Normal priority + Due within {{days}} days': 'Normal priority + Due within {{days}} days',
+  'Normal priority + No urgent deadline': 'Normal priority + No urgent deadline',
 
   // KanbanView.tsx
   'Open as markdown': 'Open as markdown',
@@ -265,6 +285,7 @@ const en = {
   'Insert list after': 'Insert list after',
   'Sort by card text': 'Sort by card text',
   'Sort by date': 'Sort by date',
+
   'Sort by tags': 'Sort by tags',
   'Sort by': 'Sort by',
 
