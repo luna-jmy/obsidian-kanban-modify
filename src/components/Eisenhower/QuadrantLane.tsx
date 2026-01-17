@@ -34,7 +34,14 @@ export const QuadrantLane = memo(function QuadrantLane({
   quadrantIndex,
   stateManager,
 }: QuadrantLaneProps) {
-  const { boardModifiers } = useContext(KanbanContext);
+  const { boardModifiers, boardData } = useContext(KanbanContext);
+
+  // Get the "Display card checkbox" setting (shouldMarkItemsComplete)
+  // This is stored per-lane in boardData.data.lanes[laneIndex].data.shouldMarkItemsComplete
+  // For Eisenhower view, we'll use a global approach: check if any lane has it enabled
+  const shouldMarkItemsComplete = boardData?.data.lanes?.some((lane: any) =>
+    lane.data.shouldMarkItemsComplete
+  ) ?? false;
 
   console.log(`[Eisenhower] QuadrantLane ${quadrantIndex} (${title}): items.length=${quadrant.items.length}`);
 
@@ -77,7 +84,8 @@ export const QuadrantLane = memo(function QuadrantLane({
         item,
         path,
         quadrantId,
-        boardModifiers
+        boardModifiers,
+        stateManager
       );
 
       console.log(`[Eisenhower Lane] Drop handled successfully`);
@@ -110,6 +118,7 @@ export const QuadrantLane = memo(function QuadrantLane({
             laneIndex={0} // 原始路径已保存在 metadata 中
             itemIndex={0} // 原始路径已保存在 metadata 中
             stateManager={stateManager}
+            shouldMarkItemsComplete={shouldMarkItemsComplete}
           />
         ))}
       </div>

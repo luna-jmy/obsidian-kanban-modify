@@ -9,6 +9,7 @@
 import { moment } from 'obsidian';
 import { GTDState } from 'src/types/gtd';
 import { Item } from 'src/components/types';
+import { t } from 'src/lang/helpers';
 
 /**
  * Extracts the task ID from an item's metadata or title.
@@ -208,10 +209,10 @@ export function classifyGTD(items: Item[]): GTDClassification {
  */
 export function getGTDStateLabel(state: GTDState): string {
   const labels: Record<GTDState, string> = {
-    Inbox: '收集箱',
-    NextActions: '等待/授权',
-    InProgress: '进行中',
-    Done: '已完成',
+    Inbox: t('GTD Inbox'),
+    NextActions: t('GTD NextActions'),
+    InProgress: t('GTD InProgress'),
+    Done: t('GTD Done'),
   };
   return labels[state];
 }

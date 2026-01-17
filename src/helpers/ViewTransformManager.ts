@@ -3,6 +3,7 @@ import update from 'immutability-helper';
 import { KanbanFormat, LaneMapping } from '../Settings';
 import { Board, Lane, DataTypes } from '../components/types';
 import { StateManager } from '../StateManager';
+import { t } from 'src/lang/helpers';
 
 export interface ViewDefinition {
   type: KanbanFormat;
@@ -13,20 +14,20 @@ export interface ViewDefinition {
 export const EISENHOWER_VIEW: ViewDefinition = {
   type: 'eisenhower',
   virtualLanes: [
-    '重要且紧急 🔴',
-    '重要不紧急 🟢',
-    '不重要但紧急 🟡',
-    '不重要不紧急 ⚪',
+    t('Important & Urgent') + ' 🔴',
+    t('Important & Not Urgent') + ' 🟢',
+    t('Not Important & Urgent') + ' 🟡',
+    t('Not Important & Not Urgent') + ' ⚪',
   ],
 };
 
 export const GTD_VIEW: ViewDefinition = {
   type: 'gtd',
   virtualLanes: [
-    '收集箱 📥',
-    '处理中 🔄',
-    '等待/授权 ⏳',
-    '已完成 ✅',
+    t('GTD Inbox') + ' 📥',
+    t('GTD InProgress') + ' 🔄',
+    t('GTD NextActions') + ' ⏳',
+    t('GTD Done') + ' ✅',
   ],
 };
 

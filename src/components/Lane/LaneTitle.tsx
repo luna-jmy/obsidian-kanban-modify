@@ -93,6 +93,7 @@ export function LaneTitle({ maxItems, editState, setEditState, title, onChange }
           onEscape={onEscape}
           onSubmit={onSubmit}
           value={laneTitleWithMaxItems(title, maxItems)}
+          isLaneTitle={true}
         />
       ) : (
         <div className={c('lane-title-text')}>

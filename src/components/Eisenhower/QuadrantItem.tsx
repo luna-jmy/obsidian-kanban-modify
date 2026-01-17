@@ -18,6 +18,7 @@ import { getTaskStatusDone } from 'src/parsers/helpers/inlineMetadata';
 import { DateAndTime, RelativeDate } from '../Item/DateAndTime';
 import { InlineMetadata } from '../Item/InlineMetadata';
 import { Tags } from '../Item/ItemContent';
+import { ItemCheckbox } from '../Item/ItemCheckbox';
 import { useGetDateColorFn } from '../helpers';
 
 interface QuadrantItemProps {
@@ -25,6 +26,7 @@ interface QuadrantItemProps {
   laneIndex: number;
   itemIndex: number;
   stateManager: StateManager;
+  shouldMarkItemsComplete?: boolean;
 }
 
 export const QuadrantItem = memo(function QuadrantItem({
@@ -32,6 +34,7 @@ export const QuadrantItem = memo(function QuadrantItem({
   laneIndex,
   itemIndex,
   stateManager,
+  shouldMarkItemsComplete = false,
 }: QuadrantItemProps) {
   const isProject = item.data.title.toLowerCase().includes('#project');
   const { boardModifiers, filePath } = useContext(KanbanContext);
@@ -121,20 +124,6 @@ export const QuadrantItem = memo(function QuadrantItem({
     console.log(`[Eisenhower Item] Drop on item, bubbling to lane`);
   };
 
-  const handleCheck = () => {
-    const path = getOriginalPath();
-    const newCheckChar = item.data.checked ? ' ' : getTaskStatusDone();
-
-    boardModifiers.updateItem(path, {
-      ...item,
-      data: {
-        ...item.data,
-        checkChar: newCheckChar,
-        checked: !item.data.checked,
-      },
-    });
-  };
-
   const onDoubleClick = useCallback(() => {
     setEditState({ x: 0, y: 0 });
   }, []);
@@ -182,11 +171,12 @@ export const QuadrantItem = memo(function QuadrantItem({
       <div className={c('item')}>
         <div className={c('item-content-wrapper')}>
           <div className={c('item-title-wrapper')}>
-            <input
-              type="checkbox"
-              className={c('checkbox')}
-              checked={item.data.checked}
-              onChange={handleCheck}
+            <ItemCheckbox
+              item={item}
+              path={[laneIndex, itemIndex]}
+              shouldMarkItemsComplete={shouldMarkItemsComplete}
+              stateManager={stateManager}
+              boardModifiers={boardModifiers}
             />
             <div className={c('item-title')}>
               {isEditing(editState) ? (

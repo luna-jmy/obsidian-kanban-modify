@@ -17,6 +17,7 @@ import { ViewTransformManager } from 'src/helpers/ViewTransformManager';
 import { addEisenhowerTagsToAllItems } from 'src/helpers/eisenhowerAutoTag';
 import { QuadrantLane } from './QuadrantLane';
 import { c } from 'src/components/helpers';
+import { t } from 'src/lang/helpers';
 
 interface EisenhowerViewProps {
   stateManager: StateManager;
@@ -160,8 +161,8 @@ export function EisenhowerView({ stateManager }: EisenhowerViewProps) {
         {/* 第一行 */}
         <QuadrantLane
           key="q1"
-          title="重要且紧急 🔴"
-          description={`高优先级 + ${urgentDays}天内到期`}
+          title={t('Important & Urgent') + ' 🔴'}
+          description={t('High priority + Due within {{days}} days').replace('{{days}}', String(urgentDays))}
           quadrant={sortedQuadrants.q1}
           quadrantIndex={0}
           stateManager={stateManager}
@@ -169,8 +170,8 @@ export function EisenhowerView({ stateManager }: EisenhowerViewProps) {
 
         <QuadrantLane
           key="q2"
-          title="重要不紧急 🟢"
-          description="高优先级 + 无紧急截止日期"
+          title={t('Important & Not Urgent') + ' 🟢'}
+          description={t('High priority + No urgent deadline')}
           quadrant={sortedQuadrants.q2}
           quadrantIndex={1}
           stateManager={stateManager}
@@ -179,8 +180,8 @@ export function EisenhowerView({ stateManager }: EisenhowerViewProps) {
         {/* 第二行 */}
         <QuadrantLane
           key="q3"
-          title="不重要但紧急 🟡"
-          description={`普通优先级 + ${urgentDays}天内到期`}
+          title={t('Not Important & Urgent') + ' 🟡'}
+          description={t('Normal priority + Due within {{days}} days').replace('{{days}}', String(urgentDays))}
           quadrant={sortedQuadrants.q3}
           quadrantIndex={2}
           stateManager={stateManager}
@@ -188,8 +189,8 @@ export function EisenhowerView({ stateManager }: EisenhowerViewProps) {
 
         <QuadrantLane
           key="q4"
-          title="不重要不紧急 ⚪"
-          description="普通优先级 + 无紧急截止日期"
+          title={t('Not Important & Not Urgent') + ' ⚪'}
+          description={t('Normal priority + No urgent deadline')}
           quadrant={sortedQuadrants.q4}
           quadrantIndex={3}
           stateManager={stateManager}

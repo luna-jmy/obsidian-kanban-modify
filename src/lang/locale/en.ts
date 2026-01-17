@@ -38,6 +38,12 @@ const en = {
   'Normal priority + Due within {{days}} days': 'Normal priority + Due within {{days}} days',
   'Normal priority + No urgent deadline': 'Normal priority + No urgent deadline',
 
+  // GTD (Getting Things Done)
+  'GTD Inbox': 'Inbox',
+  'GTD NextActions': 'Waiting/Delegated',
+  'GTD InProgress': 'In Progress',
+  'GTD Done': 'Done',
+
   // KanbanView.tsx
   'Open as markdown': 'Open as markdown',
   'Open board settings': 'Open board settings',

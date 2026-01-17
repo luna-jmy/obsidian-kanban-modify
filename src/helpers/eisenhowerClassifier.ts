@@ -14,6 +14,7 @@ import {
   getEisenhowerQuadrant,
   EisenhowerQuadrant as MetadataQuadrant,
 } from './eisenhowerMetadata';
+import { t } from 'src/lang/helpers';
 
 // Priority 字符串值常量（用于安全比较）
 const PRI_HIGHEST = '0';
@@ -281,8 +282,8 @@ export function getQuadrantIndex(isImportant: boolean, isUrgent: boolean): numbe
  * 获取象限显示名称
  */
 export function getQuadrantName(isImportant: boolean, isUrgent: boolean): string {
-  if (isImportant && isUrgent) return '重要且紧急 🔴';
-  if (isImportant && !isUrgent) return '重要不紧急 🟢';
-  if (!isImportant && isUrgent) return '不重要但紧急 🟡';
-  return '不重要不紧急 ⚪';
+  if (isImportant && isUrgent) return t('Important & Urgent') + ' 🔴';
+  if (isImportant && !isUrgent) return t('Important & Not Urgent') + ' 🟢';
+  if (!isImportant && isUrgent) return t('Not Important & Urgent') + ' 🟡';
+  return t('Not Important & Not Urgent') + ' ⚪';
 }

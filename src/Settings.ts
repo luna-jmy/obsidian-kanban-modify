@@ -607,6 +607,9 @@ export class SettingsManager {
 
     contentEl.createEl('h4', { text: t('Date & Time') });
 
+    // Disabled: move-dates setting is tied to @{date} and @@{time} triggers
+    // which have been disabled since Tasks plugin provides its own date input
+    /*
     new Setting(contentEl)
       .setName(t('Move dates to card footer'))
       .setDesc(
@@ -648,7 +651,10 @@ export class SettingsManager {
               });
           });
       });
+    */
 
+    // Disabled: Date trigger - tied to @{date} which has been disabled
+    /*
     new Setting(contentEl)
       .setName(t('Date trigger'))
       .setDesc(t('When this is typed, it will trigger the date selector'))
@@ -675,7 +681,10 @@ export class SettingsManager {
           }
         });
       });
+    */
 
+    // Disabled: Time trigger - tied to @@{time} which has been disabled
+    /*
     new Setting(contentEl)
       .setName(t('Time trigger'))
       .setDesc(t('When this is typed, it will trigger the time selector'))
@@ -702,7 +711,10 @@ export class SettingsManager {
           }
         });
       });
+    */
 
+    // Disabled: Date format - no longer used since @{date} trigger is disabled
+    /*
     new Setting(contentEl).setName(t('Date format')).then((setting) => {
       setting.addMomentFormat((mf) => {
         setting.descEl.appendChild(
@@ -753,6 +765,8 @@ export class SettingsManager {
       });
     });
 
+    // Disabled: Time format - no longer used since @@{time} trigger is disabled
+    /*
     new Setting(contentEl).setName(t('Time format')).then((setting) => {
       setting.addMomentFormat((mf) => {
         setting.descEl.appendChild(
@@ -801,6 +815,8 @@ export class SettingsManager {
       });
     });
 
+    // Disabled: Date display format - no longer needed since @{date} trigger is disabled
+    /*
     new Setting(contentEl).setName(t('Date display format')).then((setting) => {
       setting.addMomentFormat((mf) => {
         setting.descEl.appendChild(
@@ -850,6 +866,53 @@ export class SettingsManager {
         });
       });
     });
+
+    // Disabled: Show relative date - no longer needed since @{date} trigger is disabled
+    /*
+    new Setting(contentEl)
+      .setName(t('Show relative date'))
+      .setDesc(
+        t(
+          "When toggled, cards will display the distance between today and the card's date. eg. 'In 3 days', 'A month ago'. Relative dates will not be shown for dates from the Tasks and Dataview plugins."
+        )
+      )
+      .then((setting) => {
+        let toggleComponent: ToggleComponent;
+
+        setting
+          .addToggle((toggle) => {
+            toggleComponent = toggle;
+
+            const [value, globalValue] = this.getSetting('show-relative-date', local);
+
+            if (value !== undefined) {
+              toggle.setValue(value as boolean);
+            } else if (globalValue !== undefined) {
+              toggle.setValue(globalValue as boolean);
+            }
+
+            toggle.onChange((newValue) => {
+              this.applySettingsUpdate({
+                'show-relative-date': {
+                  $set: newValue,
+                },
+              });
+            });
+          })
+          .addExtraButton((b) => {
+            b.setIcon('lucide-rotate-ccw')
+              .setTooltip(t('Reset to default'))
+              .onClick(() => {
+                const [, globalValue] = this.getSetting('show-relative-date', local);
+                toggleComponent.setValue(!!globalValue);
+
+                this.applySettingsUpdate({
+                  $unset: ['show-relative-date'],
+                });
+              });
+          });
+      });
+    */
 
     new Setting(contentEl)
       .setName(t('Show relative date'))

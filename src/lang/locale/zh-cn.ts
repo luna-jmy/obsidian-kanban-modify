@@ -34,6 +34,12 @@ const lang: Partial<Lang> = {
   'Normal priority + Due within {{days}} days': '普通优先级 + 期限在 {{days}} 天内',
   'Normal priority + No urgent deadline': '普通优先级 + 无紧迫截止日期',
 
+  // GTD (Getting Things Done)
+  'GTD Inbox': '收集箱',
+  'GTD NextActions': '等待/授权',
+  'GTD InProgress': '进行中',
+  'GTD Done': '已完成',
+
   // KanbanView.tsx
   'Open as markdown': '打开为 Markdown 文件',
   'Open board settings': '打开看板设置',

@@ -25,6 +25,8 @@ interface MarkdownEditorProps {
   value?: string;
   className: string;
   placeholder?: string;
+  /** If true, this editor is for a lane title (heading) and should not trigger Tasks plugin autocomplete */
+  isLaneTitle?: boolean;
 }
 
 export function allowNewLine(stateManager: StateManager, mod: boolean, shift: boolean) {
@@ -106,6 +108,7 @@ export function MarkdownEditor({
   editState,
   value,
   placeholder,
+  isLaneTitle = false,
 }: MarkdownEditorProps) {
   const { view, stateManager } = useContext(KanbanContext);
   const elRef = useRef<HTMLDivElement>();
@@ -120,6 +123,8 @@ export function MarkdownEditor({
         editor: ObsidianEditor,
         lineHasGlobalFilter: boolean
       ) {
+        // Prevent Tasks plugin autocomplete when editing lane titles (headings)
+        if (isLaneTitle) return false;
         if (matchTimeTrigger(stateManager.getSetting('time-trigger'), editor, cursor)) return false;
         if (matchDateTrigger(stateManager.getSetting('date-trigger'), editor, cursor)) return false;
         if (lineHasGlobalFilter && cursor.line === 0) return true;

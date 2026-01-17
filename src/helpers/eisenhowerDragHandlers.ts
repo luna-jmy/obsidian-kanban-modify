@@ -8,6 +8,7 @@
 import { moment } from 'obsidian';
 import { Item } from '../components/types';
 import { BoardModifiers } from './boardModifiers';
+import { StateManager } from '../StateManager';
 import {
   setEisenhowerQuadrant,
   EisenhowerQuadrant,
@@ -127,12 +128,14 @@ function addDueDate(text: string, date: moment.Moment): string {
  * @param sourcePath 源路径（在 Kanban 中的位置）
  * @param targetQuadrant 目标象限（q1/q2/q3/q4）
  * @param boardModifiers Kanban 板修改器
+ * @param stateManager 状态管理器
  */
 export async function handleEisenhowerDrop(
   item: Item,
   sourcePath: number[],
   targetQuadrant: EisenhowerQuadrant,
-  boardModifiers: BoardModifiers
+  boardModifiers: BoardModifiers,
+  stateManager: StateManager
 ): Promise<void> {
   console.log(`[Eisenhower Drop] Processing drop for:`, item.data.titleRaw.substring(0, 30));
   console.log(`[Eisenhower Drop] Target quadrant:`, targetQuadrant);
@@ -189,16 +192,9 @@ export async function handleEisenhowerDrop(
 
   console.log(`[Eisenhower Drop] Final titleRaw:`, updatedTitleRaw.substring(0, 80));
 
-  // 步骤 4: 更新任务内容（保持在原 Lane，只更新元数据）
-  const updatedItem = {
-    ...item,
-    data: {
-      ...item.data,
-      titleRaw: updatedTitleRaw,
-      title: updatedTitleRaw, // 同时更新 title
-      // metadata 会在下次解析时自动更新
-    },
-  };
+  // 步骤 4: 使用 stateManager.updateItemContent 重新解析任务内容
+  // 这样可以确保 title 和 titleRaw 被正确设置，并且所有元数据都被正确解析
+  const updatedItem = stateManager.updateItemContent(item, updatedTitleRaw);
 
   // 使用 Kanban 的 updateItem 方法更新任务
   // 注意：我们保持在原始位置（sourcePath），只更新内容

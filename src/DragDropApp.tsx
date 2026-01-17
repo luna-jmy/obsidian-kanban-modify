@@ -19,7 +19,7 @@ import {
   updateEntity,
 } from './dnd/util/data';
 import { getBoardModifiers } from './helpers/boardModifiers';
-import { applyEisenhowerUpdate, handleEisenhowerDrop } from './helpers/eisenhowerDragHandlers';
+import { handleEisenhowerDrop } from './helpers/eisenhowerDragHandlers';
 import KanbanPlugin from './main';
 import { frontmatterKey } from './parsers/common';
 import {
@@ -135,15 +135,21 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
 
         if (item) {
           console.log('[Eisenhower Drop] Updating:', item.data?.title?.substring(0, 30));
-          const updatedItem = handleEisenhowerDrop(
-            item,
-            { isImportant, isUrgent },
-            stateManager,
-            boardModifiers
-          );
 
-          // Apply the update using the actual board path
-          applyEisenhowerUpdate(item, updatedItem, dragPath, boardModifiers);
+          // Convert {isImportant, isUrgent} to quadrant ID
+          let targetQuadrant: 'q1' | 'q2' | 'q3' | 'q4';
+          if (isImportant && isUrgent) {
+            targetQuadrant = 'q1';
+          } else if (isImportant && !isUrgent) {
+            targetQuadrant = 'q2';
+          } else if (!isImportant && isUrgent) {
+            targetQuadrant = 'q3';
+          } else {
+            targetQuadrant = 'q4';
+          }
+
+          // handleEisenhowerDrop now handles the update internally
+          handleEisenhowerDrop(item, dragPath, targetQuadrant, boardModifiers, stateManager);
         }
 
         return;
