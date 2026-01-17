@@ -72,8 +72,13 @@ export class EntityManager {
     );
 
     if (this.scrollParent) {
+      console.log('[DEBUG] EntityManager: registering observer', { entityId: this.entityId });
       this.scrollParent.registerObserverHandler(this.entityId, measureNode, (entry) => {
         const win = getParentWindow(entry.target);
+        console.log('[DEBUG] EntityManager: observer update', {
+          entityId: this.entityId,
+          isIntersecting: entry.isIntersecting,
+        });
 
         if (entry.isIntersecting) {
           const entity = this.getEntity(entry.boundingClientRect);
@@ -102,6 +107,9 @@ export class EntityManager {
         }
       });
     } else {
+      console.log('[DEBUG] EntityManager: No scroll parent, registering immediately', {
+        entityId: this.entityId,
+      });
       const entity = this.getEntity(measureNode.getBoundingClientRect());
       this.dndManager.observeResize(measureNode);
       this.dndManager.registerHitboxEntity(this.entityId, entity, getParentWindow(entityNode));

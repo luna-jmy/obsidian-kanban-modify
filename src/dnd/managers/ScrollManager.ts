@@ -64,6 +64,11 @@ export class ScrollManager {
   }
 
   initNodes(scrollEl: HTMLElement) {
+    console.log('[DEBUG] ScrollManager: initNodes START', {
+      instanceId: this.instanceId,
+      hasScrollEl: !!scrollEl,
+      queueLen: this.observerQueue.length,
+    });
     this.scrollEl = scrollEl;
     this.scrollEl.dataset.hitboxid = this.instanceId;
     this.scrollEl.dataset.scrollid = this.instanceId;
@@ -79,10 +84,20 @@ export class ScrollManager {
       (entries) => {
         entries.forEach((entry) => {
           const targetId = (entry.target as HTMLElement).dataset?.hitboxid;
+          console.log('[DEBUG] ScrollManager Observer Fired:', {
+            targetId,
+            isIntersecting: entry.isIntersecting,
+          });
 
           if (targetId && this.observerHandlers.has(targetId)) {
             const handler = this.observerHandlers.get(targetId);
             handler && handler(entry);
+          } else {
+            console.log('[DEBUG] ScrollManager: Target ignored', {
+              targetId,
+              hasHandler: targetId ? this.observerHandlers.has(targetId) : false,
+              allHandlers: Array.from(this.observerHandlers.keys()),
+            });
           }
         });
       },
@@ -95,6 +110,9 @@ export class ScrollManager {
     const { observerQueue } = this;
     this.observerQueue = [];
 
+    console.log('[DEBUG] ScrollManager: Processing observer queue', {
+      count: observerQueue.length,
+    });
     observerQueue.forEach(([id, element, handler]) => {
       this.observerHandlers.set(id, handler);
       this.observer.observe(element);
@@ -163,6 +181,10 @@ export class ScrollManager {
   observerQueue: [string, HTMLElement, IntersectionObserverHandler][] = [];
 
   registerObserverHandler(id: string, element: HTMLElement, handler: IntersectionObserverHandler) {
+    console.log('[DEBUG] ScrollManager: registerObserverHandler', {
+      id,
+      hasObserver: !!this.observer,
+    });
     if (!this.observer) {
       this.observerQueue.push([id, element, handler]);
     } else {

@@ -55,6 +55,7 @@ export function DragOverlay({ children }: DragOverlayProps) {
       dragPosition,
       dragEntityMargin,
     }: DragEventData) => {
+      console.log('[DEBUG] DragOverlay: dragStart event received', { dragEntity, dragPosition });
       if (!dragEntity || !dragPosition || !dragOrigin) {
         return;
       }

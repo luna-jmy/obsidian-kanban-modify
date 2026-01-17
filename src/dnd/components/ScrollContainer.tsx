@@ -22,10 +22,16 @@ export function ScrollContainer({
   id,
   index,
 }: ScrollContainerProps) {
+  console.log('[DEBUG] ScrollContainer: Rendering', { id, index, className });
   const { setRef, scrollRef } = useStoredScrollState(id, index);
 
+  const handleSetRef = (el: HTMLDivElement) => {
+    console.log('[DEBUG] ScrollContainer: setRef called', { id, el: el ? 'exists' : 'null' });
+    setRef(el);
+  };
+
   return (
-    <div ref={setRef} className={classcat([className, c('scroll-container')])}>
+    <div ref={handleSetRef} className={classcat([className, c('scroll-container')])}>
       {isStatic ? (
         children
       ) : (

@@ -187,7 +187,10 @@ export class StateManager {
       this.stateReceivers.push((state) => setState(state));
       setState(this.state);
       return () => {
-        this.stateReceivers.remove(setState);
+        const index = this.stateReceivers.indexOf(setState);
+        if (index > -1) {
+          this.stateReceivers.splice(index, 1);
+        }
       };
     }, []);
 
@@ -207,7 +210,11 @@ export class StateManager {
       }
 
       return () => {
-        this.settingsNotifiers.get(key).remove(receiver);
+        const notifiers = this.settingsNotifiers.get(key);
+        const index = notifiers?.indexOf(receiver) ?? -1;
+        if (index > -1) {
+          notifiers.splice(index, 1);
+        }
       };
     }, []);
 

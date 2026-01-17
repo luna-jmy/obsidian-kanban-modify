@@ -2,16 +2,16 @@ import update from 'immutability-helper';
 import { App, MarkdownView, TFile, moment } from 'obsidian';
 import Preact, { Dispatch, RefObject, useEffect } from 'preact/compat';
 import { StateUpdater, useMemo } from 'preact/hooks';
-import { StateManager } from 'src/StateManager';
-import { Path } from 'src/dnd/types';
-import { getEntityFromPath } from 'src/dnd/util/data';
+
+import { StateManager } from '../StateManager';
+import { Path } from '../dnd/types';
+import { getEntityFromPath } from '../dnd/util/data';
 import {
   InlineField,
   getTaskStatusDone,
   getTaskStatusPreDone,
   toggleTask,
-} from 'src/parsers/helpers/inlineMetadata';
-
+} from '../parsers/helpers/inlineMetadata';
 import { SearchContextProps } from './context';
 import { Board, DataKey, DateColor, Item, Lane, PageData, TagColor } from './types';
 

@@ -13,6 +13,26 @@ const lang: Partial<Lang> = {
   'New kanban board': '新看板',
   'Untitled Kanban': '未命名看板',
   'Toggle between Kanban and markdown mode': '在看板和 Markdown 模式之间进行切换',
+  'View as Eisenhower': '切换至四象限视图',
+
+  // Eisenhower Matrix
+  'Important & Urgent': '重要且紧急',
+  'Important & Not Urgent': '重要不紧急',
+  'Not Important & Urgent': '紧急不重要',
+  'Not Important & Not Urgent': '不重要不紧急',
+  'Do First': '立即执行',
+  Schedule: '制定计划',
+  Delegate: '尽快处理',
+  "Don't Do": '暂缓处理',
+  'High priority': '高优先级',
+  'Normal priority': '普通优先级',
+  'Due within': '期限在',
+  days: '天内',
+  'No urgent deadline': '无紧迫截止日期',
+  'High priority + Due within {{days}} days': '高优先级 + 期限在 {{days}} 天内',
+  'High priority + No urgent deadline': '高优先级 + 无紧迫截止日期',
+  'Normal priority + Due within {{days}} days': '普通优先级 + 期限在 {{days}} 天内',
+  'Normal priority + No urgent deadline': '普通优先级 + 无紧迫截止日期',
 
   // KanbanView.tsx
   'Open as markdown': '打开为 Markdown 文件',

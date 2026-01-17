@@ -278,7 +278,7 @@ export const ItemContent = memo(function ItemContent({
     <div onClick={onWrapperClick} className={c('item-title')}>
       {isStatic ? (
         <MarkdownClonedPreviewRenderer
-          entityId={item.id}
+          entityId={item.isEisenhower ? `${item.id}-eisenhower` : item.id}
           className={c('item-markdown')}
           markdownString={item.data.title}
           searchQuery={searchQuery}
@@ -286,7 +286,7 @@ export const ItemContent = memo(function ItemContent({
         />
       ) : (
         <MarkdownRenderer
-          entityId={item.id}
+          entityId={item.isEisenhower ? `${item.id}-eisenhower` : item.id}
           className={c('item-markdown')}
           markdownString={item.data.title}
           searchQuery={searchQuery}
