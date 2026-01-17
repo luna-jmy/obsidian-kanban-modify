@@ -29,14 +29,35 @@ export function getEisenhowerQuadrant(titleRaw: string): EisenhowerQuadrant | nu
  */
 export function setEisenhowerQuadrant(titleRaw: string, quadrant: EisenhowerQuadrant): string {
   // 先移除现有的 eisenhower 字段（包含前面的空格）
-  // 使用 (?<=\s) 前瞻断言确保保留前面的空格，或者直接替换空格+标签
-  let result = titleRaw.replace(/\s*\[eisenhower::(q[1-4])\]/gi, '');
+  let result = titleRaw.replace(/\s*\[eisenhower::(q[1-4])\]\s*/gi, '');
   // 移除可能遗留的前导空格（但保留必要的单个空格）
   result = result.replace(/\s{2,}/g, ' ').trim();
 
   // 插入策略：添加到任务内容的末尾
-  // 这样可以确保不破坏 Tasks 插件的 emoji 标识解析
+  // 格式：任务内容 [eisenhower::qx]
+  // 注意：不在末尾添加空格，让用户决定是否需要后续内容
   result = result + ` [eisenhower::${quadrant}]`;
+
+  return result;
+}
+
+/**
+ * 规范化 eisenhower 标签格式
+ * 确保标签前后都有正确的空格，以便 Tasks 插件正确解析
+ */
+export function normalizeEisenhowerTag(titleRaw: string): string {
+  // 匹配可能格式错误的标签：前面没空格或后面紧接其他内容
+  // 格式 1: text[eisenhower::qx] -> text [eisenhower::qx]
+  // 格式 2: text[eisenhower::qx]more -> text [eisenhower::qx] more
+  // 格式 3: text [eisenhower::qx]more -> text [eisenhower::qx] more
+
+  let result = titleRaw;
+
+  // 先处理标签前面的空格：非空白字符直接跟标签
+  result = result.replace(/(\S)\[eisenhower::(q[1-4])\]/gi, '$1 [eisenhower::$2]');
+
+  // 再处理标签后面的空格：标签后直接跟非空白字符
+  result = result.replace(/\[eisenhower::(q[1-4])\](\S)/gi, '[eisenhower::$1] $2');
 
   return result;
 }

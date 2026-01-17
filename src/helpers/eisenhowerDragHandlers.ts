@@ -76,17 +76,6 @@ function removePriorityIcon(text: string): string {
 }
 
 /**
- * 从文本中移除截止日期（📅📆🗓 日期格式）
- */
-function removeDueDate(text: string): string {
-  // 移除所有 due date emoji: 📅📆🗓
-  let result = text.replace(/[📅📆🗓]\s*\d{4}-\d{2}-\d{2}\s*/gu, '');
-  // 清理多余的空格，但保留必要的单个空格
-  result = result.replace(/\s{2,}/g, ' ').trim();
-  return result;
-}
-
-/**
  * 添加优先级图标到文本
  */
 function addPriorityIcon(text: string, priority: Priority): string {
@@ -184,18 +173,20 @@ export async function handleEisenhowerDrop(
   }
 
   // 步骤 3: 根据象限属性调整截止日期
+  // 注意：只有拖到紧急象限时才添加日期，拖到非紧急象限时保留原有日期
   if (targetProps.isUrgent) {
-    // 拖到紧急象限（Q1, Q3）：添加今天的日期（如果还没有截止日期）
+    // 拖到紧急象限（Q1, Q3）：如果还没有截止日期，添加今天的日期
     const currentDueDate = extractDueDate(updatedTitleRaw);
     if (!currentDueDate) {
       const today = moment();
       updatedTitleRaw = addDueDate(updatedTitleRaw, today);
       console.log(`[Eisenhower Drop] Added due date:`, today.format('YYYY-MM-DD'));
+    } else {
+      console.log(`[Eisenhower Drop] Task already has due date, keeping it:`, currentDueDate.format('YYYY-MM-DD'));
     }
   } else {
-    // 从紧急象限拖走：移除截止日期
-    updatedTitleRaw = removeDueDate(updatedTitleRaw);
-    console.log(`[Eisenhower Drop] Removed due date`);
+    // 拖到非紧急象限（Q2, Q4）：保留原有日期，不删除
+    console.log(`[Eisenhower Drop] Target is non-urgent, keeping existing date (if any)`);
   }
 
   console.log(`[Eisenhower Drop] Final titleRaw:`, updatedTitleRaw.substring(0, 80));

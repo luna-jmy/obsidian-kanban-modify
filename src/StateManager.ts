@@ -432,6 +432,13 @@ export class StateManager {
   }
 
   updateItemContent(item: Item, content: string) {
+    // 如果内容包含 eisenhower 标签，规范化其格式
+    // 这确保标签前后都有正确的空格，以便 Tasks 插件正确解析
+    if (content.includes('[eisenhower::')) {
+      const { normalizeEisenhowerTag } = require('./helpers/eisenhowerMetadata');
+      content = normalizeEisenhowerTag(content);
+    }
+
     return this.parser.updateItemContent(item, content);
   }
 }
