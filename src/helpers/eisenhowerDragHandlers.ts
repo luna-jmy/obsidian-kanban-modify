@@ -47,25 +47,6 @@ function extractPriority(text: string): Priority | null {
 }
 
 /**
- * 从文本中提取截止日期（📅📆🗓 日期格式）
- * 注意：只提取 due date，不包括 start date (🛫) 或其他日期类型
- */
-function extractDueDate(text: string): moment.Moment | null {
-  // 匹配 due date emoji: 📅📆🗓（Tasks 插件标准）
-  const dueDateRegex = /[📅📆🗓]\s*(\d{4}-\d{2}-\d{2})/u;
-  const match = text.match(dueDateRegex);
-
-  if (match && match[1]) {
-    const parsedDate = moment(match[1], 'YYYY-MM-DD', false);
-    if (parsedDate.isValid()) {
-      return parsedDate;
-    }
-  }
-
-  return null;
-}
-
-/**
  * 从文本中移除优先级图标
  */
 function removePriorityIcon(text: string): string {
@@ -173,20 +154,39 @@ export async function handleEisenhowerDrop(
   }
 
   // 步骤 3: 根据象限属性调整截止日期
-  // 注意：只有拖到紧急象限时才添加日期，拖到非紧急象限时保留原有日期
-  if (targetProps.isUrgent) {
-    // 拖到紧急象限（Q1, Q3）：如果还没有截止日期，添加今天的日期
-    const currentDueDate = extractDueDate(updatedTitleRaw);
-    if (!currentDueDate) {
-      const today = moment();
-      updatedTitleRaw = addDueDate(updatedTitleRaw, today);
-      console.log(`[Eisenhower Drop] Added due date:`, today.format('YYYY-MM-DD'));
-    } else {
-      console.log(`[Eisenhower Drop] Task already has due date, keeping it:`, currentDueDate.format('YYYY-MM-DD'));
-    }
+  // 先决条件：
+  // - Q1 ↔ Q3（紧急象限之间）：保持日期不变
+  // - Q2 ↔ Q4（非紧急象限之间）：保持日期不变
+  // - 非紧急 → 紧急（Q2/Q4 → Q1/Q3）：设置日期为今天
+  // - 紧急 → 非紧急（Q1/Q3 → Q2/Q4）：删除截止日期
+
+  const currentIsUrgent = currentQuadrant === 'q1' || currentQuadrant === 'q3';
+  const shouldKeepDate = (currentIsUrgent && targetProps.isUrgent) ||
+                          (!currentIsUrgent && !targetProps.isUrgent);
+
+  if (shouldKeepDate) {
+    console.log(`[Eisenhower Drop] Keeping existing date (same urgency level)`);
+  } else if (targetProps.isUrgent) {
+    // 拖到紧急象限（Q1, Q3）：将截止日期设置为今天
+    // 首先移除现有的日期
+    const dateRegex = /[📅📆🗓]\s*\d{4}-\d{2}-\d{2}\s*/gu;
+    updatedTitleRaw = updatedTitleRaw.replace(dateRegex, '');
+    // 清理可能的多余空格
+    updatedTitleRaw = updatedTitleRaw.replace(/\s{2,}/g, ' ').trim();
+
+    // 添加今天的日期
+    const today = moment();
+    updatedTitleRaw = addDueDate(updatedTitleRaw, today);
+    console.log(`[Eisenhower Drop] Set due date to today:`, today.format('YYYY-MM-DD'));
   } else {
-    // 拖到非紧急象限（Q2, Q4）：保留原有日期，不删除
-    console.log(`[Eisenhower Drop] Target is non-urgent, keeping existing date (if any)`);
+    // 拖到非紧急象限（Q2, Q4）：删除截止日期
+    const dateRegex = /[📅📆🗓]\s*\d{4}-\d{2}-\d{2}\s*/gu;
+    if (dateRegex.test(updatedTitleRaw)) {
+      updatedTitleRaw = updatedTitleRaw.replace(dateRegex, '');
+      // 清理可能的多余空格
+      updatedTitleRaw = updatedTitleRaw.replace(/\s{2,}/g, ' ').trim();
+      console.log(`[Eisenhower Drop] Removed due date (urgent to non-urgent)`);
+    }
   }
 
   console.log(`[Eisenhower Drop] Final titleRaw:`, updatedTitleRaw.substring(0, 80));

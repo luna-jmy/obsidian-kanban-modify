@@ -6,7 +6,7 @@ import { KanbanSettings, SettingsManager } from './Settings';
 import { getTemplatePlugins } from './components/helpers';
 import { t } from './lang/helpers';
 
-export const defaultDateTrigger = '@';
+export const defaultDateTrigger = '📅';
 export const defaultTimeTrigger = '@@';
 export const defaultMetadataPosition = 'body';
 
