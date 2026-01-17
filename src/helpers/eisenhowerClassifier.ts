@@ -263,17 +263,90 @@ export function classifyEisenhower(
 }
 
 /**
- * 按项目标签排序 (#project 的任务排在前面)
+ * Eisenhower 智能排序
+ * 排序规则（按优先级）：
+ * 1. 有截止日期的任务排在没有截止日期的任务前面
+ * 2. 截止日期越近越靠前
+ * 3. 优先级越高越靠前（🔺 > ⏫ > 🔼 > 无 > 🔽 > ⏬）
+ * 4. 如果日期和优先级都相同，保持原顺序
  */
 export function sortByProject(items: Item[]): Item[] {
-  return [...items].sort((a, b) => {
-    const aHasProject = a.data.title.toLowerCase().includes('#project');
-    const bHasProject = b.data.title.toLowerCase().includes('#project');
+  // 优先级数值映射（越小优先级越高）
+  const priorityValue: Record<string, number> = {
+    '0': 0, // 🔺 Highest
+    '1': 1, // ⏫ High
+    '2': 2, // 🔼 Medium
+    '3': 3, // None (default)
+    '4': 4, // 🔽 Low
+    '5': 5, // ⏬ Lowest
+  };
 
-    if (aHasProject && !bHasProject) return -1;
-    if (!aHasProject && bHasProject) return 1;
+  return [...items].sort((a, b) => {
+    // 步骤 1: 提取截止日期
+    const aDate = extractDueDate(a.data.titleRaw);
+    const bDate = extractDueDate(b.data.titleRaw);
+
+    // 步骤 2: 有日期的任务排在没有日期的任务前面
+    const aHasDate = aDate !== null;
+    const bHasDate = bDate !== null;
+
+    if (aHasDate && !bHasDate) return -1;
+    if (!aHasDate && bHasDate) return 1;
+
+    // 步骤 3: 如果都有日期，按日期排序（越近越靠前）
+    if (aHasDate && bHasDate) {
+      const aDaysFromNow = aDate.diff(moment(), 'days');
+      const bDaysFromNow = bDate.diff(moment(), 'days');
+
+      // 逾期任务（负数）排最前，然后按天数升序
+      if (aDaysFromNow !== bDaysFromNow) {
+        return aDaysFromNow - bDaysFromNow;
+      }
+    }
+
+    // 步骤 4: 日期相同时（或都没有日期），按优先级排序
+    const aPriority = getPriorityValue(a, priorityValue);
+    const bPriority = getPriorityValue(b, priorityValue);
+
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+
+    // 步骤 5: 都相同，保持原顺序
     return 0;
   });
+}
+
+/**
+ * 获取任务的优先级数值
+ */
+function getPriorityValue(item: Item, priorityMap: Record<string, number>): number {
+  // 优先从 metadata.priority 读取
+  if (item.data.metadata.priority) {
+    const value = priorityMap[String(item.data.metadata.priority)];
+    if (value !== undefined) return value;
+  }
+
+  // 从 inlineMetadata 读取
+  if (item.data.metadata.inlineMetadata) {
+    const priorityField = item.data.metadata.inlineMetadata.find(
+      (field) => field.key === 'priority'
+    );
+    if (priorityField && priorityField.value) {
+      const value = priorityMap[String(priorityField.value).replace(/^[\uFEFF\u200B\u200C\u200D\u2060]/g, '')];
+      if (value !== undefined) return value;
+    }
+  }
+
+  // 从 titleRaw 提取
+  const extractedPriority = extractPriority(item.data.titleRaw);
+  if (extractedPriority) {
+    const value = priorityMap[String(extractedPriority)];
+    if (value !== undefined) return value;
+  }
+
+  // 默认优先级（无优先级）
+  return 3;
 }
 
 /**
