@@ -47,11 +47,12 @@ function extractPriority(text: string): Priority | null {
 }
 
 /**
- * 从文本中提取截止日期（📅 日期格式）
+ * 从文本中提取截止日期（📅📆🗓 日期格式）
+ * 注意：只提取 due date，不包括 start date (🛫) 或其他日期类型
  */
 function extractDueDate(text: string): moment.Moment | null {
-  // 匹配 📅 YYYY-MM-DD 格式的日期
-  const dueDateRegex = /📅\s*(\d{4}-\d{2}-\d{2})/;
+  // 匹配 due date emoji: 📅📆🗓（Tasks 插件标准）
+  const dueDateRegex = /[📅📆🗓]\s*(\d{4}-\d{2}-\d{2})/u;
   const match = text.match(dueDateRegex);
 
   if (match && match[1]) {
@@ -68,14 +69,21 @@ function extractDueDate(text: string): moment.Moment | null {
  * 从文本中移除优先级图标
  */
 function removePriorityIcon(text: string): string {
-  return text.replace(/[🔺⏫🔼🔽⏬]\uFE0F?\s*/gu, '').trim();
+  let result = text.replace(/[🔺⏫🔼🔽⏬]\uFE0F?\s*/gu, '');
+  // 清理多余的空格，但保留必要的单个空格
+  result = result.replace(/\s{2,}/g, ' ').trim();
+  return result;
 }
 
 /**
- * 从文本中移除截止日期
+ * 从文本中移除截止日期（📅📆🗓 日期格式）
  */
 function removeDueDate(text: string): string {
-  return text.replace(/📅\s*\d{4}-\d{2}-\d{2}\s*/g, '').trim();
+  // 移除所有 due date emoji: 📅📆🗓
+  let result = text.replace(/[📅📆🗓]\s*\d{4}-\d{2}-\d{2}\s*/gu, '');
+  // 清理多余的空格，但保留必要的单个空格
+  result = result.replace(/\s{2,}/g, ' ').trim();
+  return result;
 }
 
 /**

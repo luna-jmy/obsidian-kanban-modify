@@ -28,8 +28,11 @@ export function getEisenhowerQuadrant(titleRaw: string): EisenhowerQuadrant | nu
  * 如果字段不存在则添加，如果存在则更新
  */
 export function setEisenhowerQuadrant(titleRaw: string, quadrant: EisenhowerQuadrant): string {
-  // 先移除现有的 eisenhower 字段
-  let result = titleRaw.replace(EISENHOWER_FIELD_PATTERN, '').trim();
+  // 先移除现有的 eisenhower 字段（包含前面的空格）
+  // 使用 (?<=\s) 前瞻断言确保保留前面的空格，或者直接替换空格+标签
+  let result = titleRaw.replace(/\s*\[eisenhower::(q[1-4])\]/gi, '');
+  // 移除可能遗留的前导空格（但保留必要的单个空格）
+  result = result.replace(/\s{2,}/g, ' ').trim();
 
   // 插入策略：添加到任务内容的末尾
   // 这样可以确保不破坏 Tasks 插件的 emoji 标识解析
@@ -42,7 +45,10 @@ export function setEisenhowerQuadrant(titleRaw: string, quadrant: EisenhowerQuad
  * 移除任务的内联字段
  */
 export function removeEisenhowerQuadrant(titleRaw: string): string {
-  return titleRaw.replace(EISENHOWER_FIELD_PATTERN, '').trim();
+  let result = titleRaw.replace(/\s*\[eisenhower::(q[1-4])\]/gi, '');
+  // 移除可能遗留的多个空格
+  result = result.replace(/\s{2,}/g, ' ').trim();
+  return result;
 }
 
 /**

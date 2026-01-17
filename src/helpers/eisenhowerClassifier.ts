@@ -112,11 +112,12 @@ export function checkImportance(item: Item): boolean {
 }
 
 /**
- * 从文本中提取截止日期（📅 日期格式）
+ * 从文本中提取截止日期（📅📆🗓 日期格式）
+ * 注意：只提取 due date，不包括 start date (🛫) 或其他日期类型
  */
 function extractDueDate(text: string): moment.Moment | null {
-  // 匹配 📅 YYYY-MM-DD 格式的日期
-  const dueDateRegex = /📅\s*(\d{4}-\d{2}-\d{2})/;
+  // 匹配 due date emoji: 📅📆🗓（Tasks 插件标准）
+  const dueDateRegex = /[📅📆🗓]\s*(\d{4}-\d{2}-\d{2})/u;
   const match = text.match(dueDateRegex);
 
   if (match && match[1]) {
@@ -130,7 +131,7 @@ function extractDueDate(text: string): moment.Moment | null {
 }
 
 /**
- * 检查任务是否紧急
+ * 检查任务是否紧急（仅基于 due date 📅）
  * @param item 任务项
  * @param urgentDays 紧急判断天数，默认 3
  * @param useCache 是否使用缓存值（默认 false，确保实时计算）
@@ -142,49 +143,59 @@ export function checkUrgency(item: Item, urgentDays: number = 3, useCache: boole
   }
 
   // 2. 检查到期日期（实时计算）
+  // 重要：只检查 due date (📅)，忽略 start date (🛫) 和其他日期类型
   const metadata = item.data.metadata;
-
-  // 优先检查 date（moment 对象）
-  if (metadata.date && moment.isMoment(metadata.date)) {
-    const deadline = moment(metadata.date).endOf('day');
-    const urgentDeadline = moment().add(urgentDays, 'days').endOf('day');
-    const isUrgent = deadline.isSameOrBefore(urgentDeadline);
-    return isUrgent;
-  }
-
-  // 备用：检查 dateStr（原始日期字符串）
-  if (metadata.dateStr) {
-    const parsedDate = moment(metadata.dateStr, ['YYYY-MM-DD', moment.ISO_8601], false);
-    if (parsedDate.isValid()) {
-      const deadline = parsedDate.endOf('day');
-      const urgentDeadline = moment().add(urgentDays, 'days').endOf('day');
-      const isUrgent = deadline.isSameOrBefore(urgentDeadline);
-      return isUrgent;
-    }
-  }
-
-  // 检查 dueDate 字段（截止日期字符串）
-  const dueDate = (metadata as any).dueDate;
-  if (dueDate) {
-    const parsedDate = moment(String(dueDate), ['YYYY-MM-DD', moment.ISO_8601], false);
-    if (parsedDate.isValid()) {
-      const deadline = parsedDate.endOf('day');
-      const urgentDeadline = moment().add(urgentDays, 'days').endOf('day');
-      const isUrgent = deadline.isSameOrBefore(urgentDeadline);
-      return isUrgent;
-    }
-  }
-
-  // 从 titleRaw 中提取截止日期（📅 格式）
   const titleRaw = item.data.titleRaw;
+
+  // 首先从 titleRaw 中提取真正的 due date（📅 格式）
+  // 这是最可靠的方法，因为 Kanban 的 metadata.date 可能包含 start date
   const extractedDate = extractDueDate(titleRaw);
   if (extractedDate) {
     const deadline = extractedDate.endOf('day');
     const urgentDeadline = moment().add(urgentDays, 'days').endOf('day');
     const isUrgent = deadline.isSameOrBefore(urgentDeadline);
+    console.log(`[Eisenhower] checkUrgency from titleRaw 📅: ${deadline.format('YYYY-MM-DD')} <= ${urgentDeadline.format('YYYY-MM-DD')} = ${isUrgent}`);
     return isUrgent;
   }
 
+  // 检查 inlineMetadata 中的 due 字段（Tasks 插件格式）
+  if (metadata.inlineMetadata) {
+    const dueField = metadata.inlineMetadata.find((field: any) => field.key === 'due');
+    if (dueField && dueField.value) {
+      const parsedDate = moment(String(dueField.value), ['YYYY-MM-DD', moment.ISO_8601], false);
+      if (parsedDate.isValid()) {
+        const deadline = parsedDate.endOf('day');
+        const urgentDeadline = moment().add(urgentDays, 'days').endOf('day');
+        const isUrgent = deadline.isSameOrBefore(urgentDeadline);
+        console.log(`[Eisenhower] checkUrgency from inlineMetadata.due: ${deadline.format('YYYY-MM-DD')} <= ${urgentDeadline.format('YYYY-MM-DD')} = ${isUrgent}`);
+        return isUrgent;
+      }
+    }
+  }
+
+  // 最后检查 metadata.date，但需要验证它确实是 due date 而不是 start date
+  // 通过检查 titleRaw 是否包含 📅 来验证
+  if (metadata.date && moment.isMoment(metadata.date) && titleRaw.includes('📅')) {
+    const deadline = moment(metadata.date).endOf('day');
+    const urgentDeadline = moment().add(urgentDays, 'days').endOf('day');
+    const isUrgent = deadline.isSameOrBefore(urgentDeadline);
+    console.log(`[Eisenhower] checkUrgency from metadata.date (with 📅): ${deadline.format('YYYY-MM-DD')} <= ${urgentDeadline.format('YYYY-MM-DD')} = ${isUrgent}`);
+    return isUrgent;
+  }
+
+  // 备用：检查 dateStr，但同样需要验证是 due date
+  if (metadata.dateStr && titleRaw.includes('📅')) {
+    const parsedDate = moment(metadata.dateStr, ['YYYY-MM-DD', moment.ISO_8601], false);
+    if (parsedDate.isValid()) {
+      const deadline = parsedDate.endOf('day');
+      const urgentDeadline = moment().add(urgentDays, 'days').endOf('day');
+      const isUrgent = deadline.isSameOrBefore(urgentDeadline);
+      console.log(`[Eisenhower] checkUrgency from metadata.dateStr (with 📅): ${deadline.format('YYYY-MM-DD')} <= ${urgentDeadline.format('YYYY-MM-DD')} = ${isUrgent}`);
+      return isUrgent;
+    }
+  }
+
+  console.log(`[Eisenhower] checkUrgency: no due date found, returning false`);
   return false;
 }
 
