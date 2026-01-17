@@ -12,9 +12,20 @@ export function applyDate(ctx: EditorSuggestContext, stateManager: StateManager,
   const shouldLinkDates = stateManager.getSetting('link-date-to-daily-note');
 
   const formattedDate = moment(date).format(dateFormat);
-  const wrappedDate = shouldLinkDates
-    ? buildLinkToDailyNote(stateManager.app, formattedDate)
-    : `{${formattedDate}} `;
+
+  // 检查是否使用 emoji 触发器（如 📅）
+  const isEmojiTrigger = /[\p{Emoji}]/u.test(dateTrigger);
+
+  let wrappedDate: string;
+  if (isEmojiTrigger) {
+    // Emoji 触发器：使用 Tasks 插件格式 "📅 YYYY-MM-DD"
+    wrappedDate = ` ${formattedDate} `;
+  } else {
+    // 传统触发器：保持原有格式 @{YYYY-MM-DD}
+    wrappedDate = shouldLinkDates
+      ? buildLinkToDailyNote(stateManager.app, formattedDate)
+      : `{${formattedDate}} `;
+  }
 
   const start = { line: ctx.start.line, ch: ctx.start.ch + dateTrigger.length };
 

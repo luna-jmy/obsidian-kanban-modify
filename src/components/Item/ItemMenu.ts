@@ -216,9 +216,21 @@ export function useItemMenu({
             .onClick(() => {
               const shouldLinkDates = stateManager.getSetting('link-date-to-daily-note');
               const dateTrigger = stateManager.getSetting('date-trigger');
-              const contentMatch = shouldLinkDates
-                ? '(?:\\[[^\\]]+\\]\\([^\\)]+\\)|\\[\\[[^\\]]+\\]\\])'
-                : '{[^}]+}';
+
+              // 检查是否使用 emoji 触发器
+              const isEmojiTrigger = /[\p{Emoji}]/u.test(dateTrigger as string);
+
+              let contentMatch: string;
+              if (isEmojiTrigger) {
+                // Emoji 触发器：匹配 emoji 后跟空格+日期的模式
+                contentMatch = '\\s+\\d{4}-\\d{2}-\\d{2}';
+              } else {
+                // 传统触发器：保持原有格式
+                contentMatch = shouldLinkDates
+                  ? '(?:\\[[^\\]]+\\]\\([^\\)]+\\)|\\[\\[[^\\]]+\\]\\])'
+                  : '{[^}]+}';
+              }
+
               const dateRegEx = new RegExp(
                 `(^|\\s)${escapeRegExpStr(dateTrigger as string)}${contentMatch}`
               );

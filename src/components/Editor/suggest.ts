@@ -23,8 +23,19 @@ export function matchTimeTrigger(timeTrigger: string, editor: Editor, cursor: Ed
 
 export function matchDateTrigger(dateTrigger: string, editor: Editor, cursor: EditorPosition) {
   const textCtx = (editor.getLine(cursor.line) || '').slice(0, cursor.ch);
-  const dateTriggerRegex = new RegExp(`(?:^|\\s)${escapeRegExpStr(dateTrigger)}{?([^}]*)$`);
-  return textCtx.match(dateTriggerRegex);
+  // 如果使用 emoji 触发器（如 📅），匹配 emoji 后跟空格的模式
+  // 如果使用传统触发器（如 @），保持原有的花括号格式支持
+  const isEmojiTrigger = /[\p{Emoji}]/u.test(dateTrigger);
+
+  if (isEmojiTrigger) {
+    // Emoji 触发器：匹配 emoji 后跟空格或行尾
+    const emojiTriggerRegex = new RegExp(`(?:^|\\s)${escapeRegExpStr(dateTrigger)}\\s*$`);
+    return textCtx.match(emojiTriggerRegex);
+  } else {
+    // 传统触发器：保持原有格式 @{date}
+    const dateTriggerRegex = new RegExp(`(?:^|\\s)${escapeRegExpStr(dateTrigger)}{?([^}]*)$`);
+    return textCtx.match(dateTriggerRegex);
+  }
 }
 
 export class DateSuggest extends EditorSuggest<[]> {

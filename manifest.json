@@ -1,10 +1,10 @@
 {
   "id": "obsidian-kanban",
   "name": "Kanban-Enhanced",
-  "version": "2.0.51",
+  "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "Create markdown-backed Kanban boards in Obsidian with enhanced features, based on the original Obsidian Kanban plugin.",
-  "author": "Luna",
+  "description": "Create markdown-backed Kanban boards in Obsidian with expanded views, based on the original Obsidian Kanban plugin.",
+  "author": "Diane",
   "authorUrl": "https://github.com/luna-jmy/obsidian-kanban-modify",
   "helpUrl": "https://publish.obsidian.md/kanban/Obsidian+Kanban+Plugin",
   "isDesktopOnly": false

@@ -100,9 +100,8 @@ export default class KanbanPlugin extends Plugin {
 
     this.MarkdownEditor = getEditorClass(this.app);
 
-    // Disabled: Tasks plugin already provides date/time input
-    // this.registerEditorSuggest(new TimeSuggest(this.app, this));
-    // this.registerEditorSuggest(new DateSuggest(this.app, this));
+    this.registerEditorSuggest(new TimeSuggest(this.app, this));
+    this.registerEditorSuggest(new DateSuggest(this.app, this));
 
     this.registerEvent(
       this.app.workspace.on('window-open', (_: any, win: Window) => {

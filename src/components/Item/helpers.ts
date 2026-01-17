@@ -101,17 +101,39 @@ export function constructMenuDatePickerOnChange({
   const dateFormat = stateManager.getSetting('date-format');
   const shouldLinkDates = stateManager.getSetting('link-date-to-daily-note');
   const dateTrigger = stateManager.getSetting('date-trigger');
-  const contentMatch = shouldLinkDates
-    ? '(?:\\[[^\\]]+\\]\\([^)]+\\)|\\[\\[[^\\]]+\\]\\])'
-    : '{[^}]+}';
+
+  // 检查是否使用 emoji 触发器（如 📅）
+  const isEmojiTrigger = /[\p{Emoji}]/u.test(dateTrigger as string);
+
+  // 根据触发器类型设置匹配模式和日期格式
+  let contentMatch: string;
+  let wrappedDate: string;
+
+  if (isEmojiTrigger) {
+    // Emoji 触发器：匹配 emoji 后跟空格+日期的模式
+    contentMatch = '\\s+\\d{4}-\\d{2}-\\d{2}';
+  } else {
+    // 传统触发器：保持原有格式
+    contentMatch = shouldLinkDates
+      ? '(?:\\[[^\\]]+\\]\\([^)]+\\)|\\[\\[[^\\]]+\\]\\])'
+      : '{[^}]+}';
+  }
+
   const dateRegEx = new RegExp(`(^|\\s)${escapeRegExpStr(dateTrigger as string)}${contentMatch}`);
 
   return (dates: Date[]) => {
     const date = dates[0];
     const formattedDate = moment(date).format(dateFormat);
-    const wrappedDate = shouldLinkDates
-      ? buildLinkToDailyNote(stateManager.app, formattedDate)
-      : `{${formattedDate}}`;
+
+    if (isEmojiTrigger) {
+      // Emoji 触发器：使用 Tasks 插件格式 "📅 YYYY-MM-DD"
+      wrappedDate = ` ${formattedDate}`;
+    } else {
+      // 传统触发器：保持原有格式 @{YYYY-MM-DD}
+      wrappedDate = shouldLinkDates
+        ? buildLinkToDailyNote(stateManager.app, formattedDate)
+        : `{${formattedDate}}`;
+    }
 
     let titleRaw = item.data.titleRaw;
 
