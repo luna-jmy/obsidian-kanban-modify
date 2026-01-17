@@ -5,39 +5,49 @@
 
 import { Item } from '../components/types';
 import { setEisenhowerQuadrant, EisenhowerQuadrant } from './eisenhowerMetadata';
-import { classifyEisenhower } from './eisenhowerClassifier';
+import { classifyEisenhower, checkImportance, checkUrgency } from './eisenhowerClassifier';
 
 /**
- * 为单个任务添加内联字段（如果还没有）
+ * 为单个任务添加或更新内联字段
  * @returns 返回更新后的 titleRaw，如果不需要更新则返回 null
  */
 export function addEisenhowerTagToItem(
   item: Item,
   urgentDays: number = 3
 ): string | null {
+  // 直接使用 checkImportance 和 checkUrgency 计算目标象限
+  // 不使用 classifyEisenhower，因为它会读取现有的 eisenhower 标签
+  const isImportant = checkImportance(item);
+  const isUrgent = checkUrgency(item, urgentDays, false);
+
+  let targetQuadrant: EisenhowerQuadrant;
+  if (isImportant && isUrgent) {
+    targetQuadrant = 'q1';
+  } else if (isImportant && !isUrgent) {
+    targetQuadrant = 'q2';
+  } else if (!isImportant && isUrgent) {
+    targetQuadrant = 'q3';
+  } else {
+    targetQuadrant = 'q4';
+  }
+
+  console.log(`[Eisenhower AutoTag] Item: "${item.data.titleRaw.substring(0, 30)}" -> isImportant=${isImportant}, isUrgent=${isUrgent}, target=${targetQuadrant}`);
+
   // 检查是否已经有内联字段
   const existingTag = item.data.titleRaw.match(/\[eisenhower::(q[1-4])\]/i);
   if (existingTag) {
-    return null; // 已经有标签，不需要添加
-  }
-
-  // 使用分类逻辑确定应该属于哪个象限
-  const classified = classifyEisenhower([item], urgentDays);
-
-  // 找到这个任务被分配到哪个象限
-  let targetQuadrant: EisenhowerQuadrant | null = null;
-  for (const [key, value] of Object.entries(classified)) {
-    if (value.items.length > 0) {
-      targetQuadrant = key as EisenhowerQuadrant;
-      break;
+    const currentQuadrant = existingTag[1].toLowerCase() as EisenhowerQuadrant;
+    // 如果当前标签与目标象限一致，不需要更新
+    if (currentQuadrant === targetQuadrant) {
+      console.log(`[Eisenhower AutoTag] Tag already correct: ${currentQuadrant}`);
+      return null;
     }
+    console.log(`[Eisenhower AutoTag] Tag needs update: ${currentQuadrant} -> ${targetQuadrant}`);
+  } else {
+    console.log(`[Eisenhower AutoTag] No existing tag, will add: ${targetQuadrant}`);
   }
 
-  if (!targetQuadrant) {
-    return null; // 无法分类
-  }
-
-  // 添加内联字段
+  // 添加或更新内联字段
   const newTitleRaw = setEisenhowerQuadrant(item.data.titleRaw, targetQuadrant);
   return newTitleRaw;
 }

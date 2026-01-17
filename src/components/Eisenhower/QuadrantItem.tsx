@@ -19,6 +19,8 @@ import { DateAndTime, RelativeDate } from '../Item/DateAndTime';
 import { InlineMetadata } from '../Item/InlineMetadata';
 import { Tags } from '../Item/ItemContent';
 import { ItemCheckbox } from '../Item/ItemCheckbox';
+import { ItemMenuButton } from '../Item/ItemMenuButton';
+import { useItemMenu } from '../Item/ItemMenu';
 import { useGetDateColorFn } from '../helpers';
 
 interface QuadrantItemProps {
@@ -85,6 +87,17 @@ export const QuadrantItem = memo(function QuadrantItem({
     }
   }, [editState, item, boardModifiers, stateManager, getOriginalPath]);
 
+  const path = getOriginalPath();
+
+  // 使用 useItemMenu hook 显示菜单
+  const showItemMenu = useItemMenu({
+    boardModifiers,
+    item,
+    setEditState,
+    stateManager,
+    path,
+  });
+
   const handleDragStart = (e: DragEvent) => {
     console.log(`[Eisenhower] Drag start triggered:`, item.data.titleRaw.substring(0, 30));
 
@@ -131,7 +144,8 @@ export const QuadrantItem = memo(function QuadrantItem({
   const onContextMenu = useCallback((e: MouseEvent) => {
     if (isEditing(editState)) return;
     e.preventDefault();
-  }, [editState]);
+    showItemMenu(e);
+  }, [editState, showItemMenu]);
 
   const onEnter = useCallback(
     (cm: any, mod: boolean, shift: boolean) => {
@@ -153,6 +167,16 @@ export const QuadrantItem = memo(function QuadrantItem({
   const isMatch = search?.query ? item.data.titleSearch.includes(search.query) : false;
   const getDateColor = useGetDateColorFn(stateManager);
 
+  const ignoreAttr = useMemo(() => {
+    if (isEditing(editState)) {
+      return {
+        'data-ignore-drag': true,
+      };
+    }
+
+    return {};
+  }, [editState]);
+
   return (
     <div
       className={classcat([
@@ -169,11 +193,11 @@ export const QuadrantItem = memo(function QuadrantItem({
       onContextMenu={onContextMenu}
     >
       <div className={c('item')}>
-        <div className={c('item-content-wrapper')}>
-          <div className={c('item-title-wrapper')}>
+        <div className={c('item-content-wrapper')} {...ignoreAttr}>
+          <div className={c('item-title-wrapper')} {...ignoreAttr}>
             <ItemCheckbox
               item={item}
-              path={[laneIndex, itemIndex]}
+              path={path}
               shouldMarkItemsComplete={shouldMarkItemsComplete}
               stateManager={stateManager}
               boardModifiers={boardModifiers}
@@ -217,6 +241,7 @@ export const QuadrantItem = memo(function QuadrantItem({
                 </>
               )}
             </div>
+            <ItemMenuButton editState={editState} setEditState={setEditState} showMenu={showItemMenu} />
           </div>
         </div>
       </div>

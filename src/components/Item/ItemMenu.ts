@@ -55,7 +55,9 @@ export function useItemMenu({
           i.setIcon('lucide-file-plus-2')
             .setTitle(t('New note from card'))
             .onClick(async () => {
-              const prevTitle = item.data.titleRaw.split('\n')[0].trim();
+              // Use display title (without metadata) for the note title
+              const prevTitle = item.data.title.split('\n')[0].trim();
+              const prevTitleRaw = item.data.titleRaw.split('\n')[0].trim();
               const sanitizedTitle = prevTitle
                 .replace(embedRegEx, '$1')
                 .replace(wikilinkRegEx, '$1')
@@ -85,8 +87,9 @@ export function useItemMenu({
 
               await applyTemplate(stateManager, newNoteTemplatePath as string | undefined);
 
+              // Replace the titleRaw (with metadata) but preserve metadata structure
               const newTitleRaw = item.data.titleRaw.replace(
-                prevTitle,
+                prevTitleRaw,
                 stateManager.app.fileManager.generateMarkdownLink(newFile, stateManager.file.path)
               );
 

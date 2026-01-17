@@ -91,11 +91,11 @@ export function DragDropApp({ win, plugin }: { win: Window; plugin: KanbanPlugin
         return;
       }
 
-      const dragPath = dragEntityData.originalPath || dragEntity.getPath();
       const dropPath = dropEntity.getPath();
       // dragEntityData comes from dragEntity.getData(), so we are good.
       const dragEntityData = dragEntity.getData();
       const dropEntityData = dropEntity.getData();
+      const dragPath = dragEntityData.originalPath || dragEntity.getPath();
       const [, sourceFile] = dragEntity.scopeId.split(':::');
       const [, destinationFile] = dropEntity.scopeId.split(':::');
 

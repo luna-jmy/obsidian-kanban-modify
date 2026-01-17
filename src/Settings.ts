@@ -99,6 +99,7 @@ export interface KanbanSettings {
   // 虚拟视图相关设置
   'lane-mapping'?: LaneMapping[];               // Lane 映射关系
   'eisenhower-urgent-days'?: number;            // Eisenhower: 紧急判断天数，默认 3
+  'eisenhower-target-lane'?: string;            // Eisenhower: 新卡片添加的目标看板列表名称
   'gtd-auto-move-to-inbox'?: boolean;           // GTD: 新任务自动进入收集箱
   'virtual-view-last-active'?: KanbanFormat;    // 记住上次使用的虚拟视图
 }
@@ -152,6 +153,7 @@ export const settingKeyLookup: Set<keyof KanbanSettings> = new Set([
   // 虚拟视图相关
   'lane-mapping',
   'eisenhower-urgent-days',
+  'eisenhower-target-lane',
   'gtd-auto-move-to-inbox',
   'virtual-view-last-active',
 ]);
