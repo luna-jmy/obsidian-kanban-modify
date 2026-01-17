@@ -107,6 +107,8 @@ export function getLinkFromObj(v: any, view: KanbanView) {
 
   const file = app.vault.getAbstractFileByPath(v.path);
   if (file && file instanceof TFile) {
+    // 检查 view.file 是否存在
+    if (!view.file) return null;
     const link = app.fileManager.generateMarkdownLink(file, view.file.path, v.subpath, v.display);
     return `${v.embed && link[0] !== '!' ? '!' : ''}${link}`;
   }

@@ -47,7 +47,13 @@ import { cleanUpTagSortSettings, renderTagSortSettings } from './settings/TagSor
 
 const numberRegEx = /^\d+(?:\.\d+)?$/;
 
-export type KanbanFormat = 'basic' | 'board' | 'table' | 'list';
+export type KanbanFormat = 'basic' | 'board' | 'table' | 'list' | 'eisenhower' | 'gtd';
+
+// Lane 映射类型：用于虚拟视图（如 Eisenhower）存储原始 Lane 与虚拟 Lane 的对应关系
+export interface LaneMapping {
+  original: string;   // 原始 Lane 名称
+  virtual: string;    // 虚拟 Lane 名称 (视图相关)
+}
 
 export interface KanbanSettings {
   [frontmatterKey]?: KanbanFormat;
@@ -90,6 +96,11 @@ export interface KanbanSettings {
   'tag-sort'?: TagSort[];
   'time-format'?: string;
   'time-trigger'?: string;
+  // 虚拟视图相关设置
+  'lane-mapping'?: LaneMapping[];               // Lane 映射关系
+  'eisenhower-urgent-days'?: number;            // Eisenhower: 紧急判断天数，默认 3
+  'gtd-auto-move-to-inbox'?: boolean;           // GTD: 新任务自动进入收集箱
+  'virtual-view-last-active'?: KanbanFormat;    // 记住上次使用的虚拟视图
 }
 
 export interface KanbanViewSettings {
@@ -138,6 +149,11 @@ export const settingKeyLookup: Set<keyof KanbanSettings> = new Set([
   'tag-sort',
   'time-format',
   'time-trigger',
+  // 虚拟视图相关
+  'lane-mapping',
+  'eisenhower-urgent-days',
+  'gtd-auto-move-to-inbox',
+  'virtual-view-last-active',
 ]);
 
 export type SettingRetriever = <K extends keyof KanbanSettings>(

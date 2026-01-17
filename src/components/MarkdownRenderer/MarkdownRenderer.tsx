@@ -88,6 +88,12 @@ export class BasicMarkdownRenderer extends Component {
   async render() {
     this.containerEl.empty();
 
+    // 检查 view.file 是否存在
+    if (!this.view.file) {
+      this.renderCapability.resolve();
+      return;
+    }
+
     await ObsidianRenderer.render(
       this.view.app,
       this.markdown,
@@ -200,6 +206,9 @@ export class BasicMarkdownRenderer extends Component {
 
   resolveLinks() {
     const { containerEl, view } = this;
+    // 检查 view.file 是否存在
+    if (!view.file) return;
+
     const internalLinkEls = containerEl.findAll('a.internal-link');
     for (const internalLinkEl of internalLinkEls) {
       const href = this.getInternalLinkHref(internalLinkEl);

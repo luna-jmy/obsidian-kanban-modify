@@ -3,6 +3,8 @@ import { KanbanSettings } from 'src/Settings';
 import { Nestable } from 'src/dnd/types';
 import { InlineField } from 'src/parsers/helpers/inlineMetadata';
 import { FileAccessor } from 'src/parsers/helpers/parser';
+import { Priority } from 'src/parsers/helpers/inlineMetadata';
+import { GTDState } from 'src/types/gtd';
 
 export enum LaneSort {
   TitleAsc,
@@ -75,6 +77,14 @@ export interface ItemMetadata {
   fileMetadata?: FileMetadata;
   fileMetadataOrder?: string[];
   inlineMetadata?: InlineField[];
+  // Eisenhower 相关
+  priority?: Priority;
+  isImportant?: boolean;  // 缓存计算结果
+  isUrgent?: boolean;     // 缓存计算结果
+  // GTD 相关
+  gtdState?: GTDState;    // 缓存计算结果
+  taskId?: string;        // 任务 ID
+  dependsOn?: string;     // 依赖的任务 ID
 }
 
 export interface ItemData {

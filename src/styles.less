@@ -1782,3 +1782,179 @@ body:not(.native-scrollbars) .kanban-plugin__scroll-container::-webkit-scrollbar
     background-color: var(--date-background-color, rgba(var(--mono-rgb-100), 0.05));
   }
 }
+
+// ============================================================================
+// Eisenhower 视图样式
+// ============================================================================
+
+// Eisenhower 视图容器
+.kanban-plugin__eisenhower-view {
+  display: block !important;
+  height: 100%;
+  padding: 1rem;
+  position: relative;
+}
+
+// 2x2 网格布局 - 使用 flexbox 模拟 grid
+.kanban-plugin__eisenhower-grid {
+  display: flex !important;
+  position: relative !important;
+  flex-wrap: wrap !important;
+  align-content: flex-start !important;
+  gap: 1.5rem !important;
+  min-height: 500px;
+  width: 100%;
+  height: 100%;
+  transform: none !important;
+  contain: none !important;
+
+  @media (max-width: 768px) {
+    flex-direction: column !important;
+  }
+}
+
+// 象限 Lane - 使用固定宽度实现 2x2
+.kanban-plugin__quadrant-lane {
+  border: 2px dashed var(--background-modifier-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  background-color: var(--background-primary);
+  overflow: hidden;
+  // 关键：每个象限占约 50% 宽度（减去 gap）
+  width: calc(50% - 0.75rem);
+  height: calc(50% - 0.75rem);
+  position: static !important;
+  float: none !important;
+  transform: none !important;
+  clear: none !important;
+  contain: none !important;
+
+  &:hover {
+    border-style: solid;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  // Q1: 重要且紧急 - 红色
+  &.quadrant-q1 {
+    background-color: rgba(244, 63, 94, 0.05);
+    border-color: rgba(244, 63, 94, 0.4);
+
+    .quadrant-title {
+      color: #dc2626;
+    }
+  }
+
+  // Q2: 重要不紧急 - 绿色
+  &.quadrant-q2 {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.4);
+
+    .quadrant-title {
+      color: #059669;
+    }
+  }
+
+  // Q3: 不重要但紧急 - 黄色
+  &.quadrant-q3 {
+    background-color: rgba(245, 158, 11, 0.05);
+    border-color: rgba(245, 158, 11, 0.4);
+
+    .quadrant-title {
+      color: #d97706;
+    }
+  }
+
+  // Q4: 不重要不紧急 - 灰色
+  &.quadrant-q4 {
+    background-color: rgba(148, 163, 184, 0.05);
+    border-color: rgba(148, 163, 184, 0.4);
+
+    .quadrant-title {
+      color: #64748b;
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 300px;
+  }
+}
+
+// 象限头部
+.kanban-plugin__quadrant-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.kanban-plugin__quadrant-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+}
+
+.kanban-plugin__quadrant-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--background-modifier-border);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  opacity: 0.8;
+}
+
+.kanban-plugin__quadrant-description {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  margin: 0.25rem 0 0 0;
+}
+
+// 象限任务列表
+.kanban-plugin__quadrant-items {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--background-modifier-border);
+    border-radius: 3px;
+  }
+}
+
+// 象限任务项
+.kanban-plugin__quadrant-item {
+  position: relative;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--background-secondary);
+  cursor: grab;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  // 项目任务高亮
+  &.quadrant-item-project {
+    border-left: 4px solid #4f46e5;
+    background-color: rgba(79, 70, 229, 0.05);
+  }
+}

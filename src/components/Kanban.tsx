@@ -19,6 +19,7 @@ import { Lanes } from './Lane/Lane';
 import { LaneForm } from './Lane/LaneForm';
 import { TableView } from './Table/Table';
 import { KanbanContext, SearchContext } from './context';
+import { EisenhowerView } from './Eisenhower/EisenhowerView';
 import { baseClassName, c, useSearchValue } from './helpers';
 import { DataTypes } from './types';
 
@@ -223,7 +224,7 @@ export const Kanban = ({ view, stateManager }: KanbanProps) => {
               },
               ...getCSSClass(boardData.data.frontmatter),
             ])}
-            {...html5DragHandlers}
+            {...(boardView !== 'eisenhower' ? html5DragHandlers : {})}
           >
             {(isLaneFormVisible || boardData.children.length === 0) && (
               <LaneForm onNewLane={onNewLane} closeLaneForm={closeLaneForm} />
@@ -263,6 +264,8 @@ export const Kanban = ({ view, stateManager }: KanbanProps) => {
             )}
             {boardView === 'table' ? (
               <TableView boardData={boardData} stateManager={stateManager} />
+            ) : boardView === 'eisenhower' ? (
+              <EisenhowerView stateManager={stateManager} />
             ) : (
               <ScrollContainer
                 id={view.id}

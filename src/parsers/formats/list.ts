@@ -220,6 +220,9 @@ export function listItemToItemData(stateManager: StateManager, md: string, item:
 
       itemData.title = title;
     }
+
+    // 移除 Eisenhower 内联字段（在所有视图中隐藏）
+    itemData.title = itemData.title.replace(/\[eisenhower::(q[1-4])\]/gi, '').trim();
   }
 
   itemData.metadata.tags?.sort(defaultSort);
