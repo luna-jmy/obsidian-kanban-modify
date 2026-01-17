@@ -102,6 +102,7 @@ export interface KanbanSettings {
   'eisenhower-target-lane'?: string;            // Eisenhower: 新卡片添加的目标看板列表名称
   'gtd-auto-move-to-inbox'?: boolean;           // GTD: 新任务自动进入收集箱
   'virtual-view-last-active'?: KanbanFormat;    // 记住上次使用的虚拟视图
+  'use-tasks-plugin'?: boolean;                 // 是否使用 Tasks 插件添加新卡片
 }
 
 export interface KanbanViewSettings {
@@ -156,6 +157,7 @@ export const settingKeyLookup: Set<keyof KanbanSettings> = new Set([
   'eisenhower-target-lane',
   'gtd-auto-move-to-inbox',
   'virtual-view-last-active',
+  'use-tasks-plugin',
 ]);
 
 export type SettingRetriever = <K extends keyof KanbanSettings>(
@@ -487,6 +489,49 @@ export class SettingsManager {
           manager: this,
         })
       );
+
+    new Setting(contentEl)
+      .setName(t('Use Tasks plugin for new cards'))
+      .setDesc(
+        t('When toggled, new cards will be created using the Tasks plugin modal, providing more task management options.')
+      )
+      .then((setting) => {
+        let toggleComponent: ToggleComponent;
+
+        setting
+          .addToggle((toggle) => {
+            toggleComponent = toggle;
+
+            const [value, globalValue] = this.getSetting('use-tasks-plugin', local);
+
+            // 默认值为 false，但需要显式设置以避免 undefined 问题
+            const currentValue = value !== undefined ? value as boolean :
+                                (globalValue !== undefined ? globalValue as boolean : false);
+
+            toggle.setValue(currentValue);
+
+            toggle.onChange((newValue) => {
+              console.log('[Settings] use-tasks-plugin changed to:', newValue);
+              this.applySettingsUpdate({
+                'use-tasks-plugin': {
+                  $set: newValue,
+                },
+              });
+            });
+          })
+          .addExtraButton((b) => {
+            b.setIcon('lucide-rotate-ccw')
+              .setTooltip(t('Reset to default'))
+              .onClick(() => {
+                const [, globalValue] = this.getSetting('use-tasks-plugin', local);
+                toggleComponent.setValue(!!globalValue);
+
+                this.applySettingsUpdate({
+                  $unset: ['use-tasks-plugin'],
+                });
+              });
+          });
+      });
 
     contentEl.createEl('h4', { text: t('Tags') });
 

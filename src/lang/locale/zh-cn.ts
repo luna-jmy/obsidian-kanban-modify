@@ -87,6 +87,9 @@ const lang: Partial<Lang> = {
   'Notes created from Kanban cards will be placed in this folder. If blank, they will be placed in the default location for this vault.':
     '从看板卡片创建的笔记会放置到该文件夹中。如果为空，笔记将会放置到 Obsidian 的默认文件存放位置。',
   'Default folder': '默认文件夹',
+  'Use Tasks plugin for new cards': '使用 Tasks 插件添加新卡片',
+  'When toggled, new cards will be created using the Tasks plugin modal, providing more task management options.':
+    '启用后，新卡片将通过 Tasks 插件的弹窗创建，提供更多任务管理选项。',
   'List width': '列宽',
   'Enter a number to set the list width in pixels.': '输入一个像素值来设置列的宽度',
   'Maximum number of archived cards': '单个看板内已归档卡片的最大数量',
@@ -163,6 +166,7 @@ const lang: Partial<Lang> = {
   'Card title...': '卡片标题……',
   'Add card': '添加',
   'Add a card': '添加卡片',
+  'Create with Tasks': '用 Tasks 创建',
 
   // components/Item/ItemMenu.ts
   'Edit card': '编辑卡片',

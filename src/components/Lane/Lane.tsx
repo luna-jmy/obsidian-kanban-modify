@@ -162,6 +162,7 @@ function DraggableLaneRaw({
               laneIndex={laneIndex}
               lane={lane}
               setIsItemInputVisible={isCompactPrepend ? setEditState : undefined}
+              addItems={addItems}
               isCollapsed={isCollapsed}
               toggleIsCollapsed={toggleIsCollapsed}
             />

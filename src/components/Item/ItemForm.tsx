@@ -39,6 +39,54 @@ export function ItemForm({ addItems, editState, setEditState, hideButton }: Item
     }
   };
 
+  const createItemWithTasks = async () => {
+    try {
+      const tasksPlugin = (stateManager.app as any).plugins.plugins['obsidian-tasks-plugin'];
+      const tasksApi = tasksPlugin?.apiV1;
+
+      if (!tasksApi) {
+        console.warn('[Kanban] Tasks plugin not found, falling back to default input');
+        setEditState({ x: 0, y: 0 });
+        return;
+      }
+
+      const taskLine = await tasksApi.createTaskLineModal();
+
+      if (taskLine && taskLine.trim() !== '') {
+        // 移除 Tasks 插件添加的复选框，因为 Kanban 会自动添加
+        const cleanTaskLine = taskLine.replace(/^-\s*\[[ xX]\]\s*/, '');
+        addItems([stateManager.getNewItem(cleanTaskLine, ' ')]);
+      }
+    } catch (error) {
+      console.error('[Kanban] Failed to open Tasks modal:', error);
+      // Fallback to default input on error
+      setEditState({ x: 0, y: 0 });
+    }
+  };
+
+  const useTasksPlugin = stateManager.useSetting('use-tasks-plugin');
+
+  // 如果启用了 Tasks 插件且不是在编辑状态，显示 "Create with Tasks" 按钮
+  if (useTasksPlugin && !isEditing(editState)) {
+    if (hideButton) return null;
+
+    return (
+      <div className={c('item-button-wrapper')}>
+        <button
+          className={c('new-item-button')}
+          onClick={createItemWithTasks}
+          onDragOver={(e) => {
+            if (getDropAction(stateManager, e.dataTransfer)) {
+              setEditState({ x: 0, y: 0 });
+            }
+          }}
+        >
+          <span className={c('item-button-plus')}>+</span> {t('Create with Tasks')}
+        </button>
+      </div>
+    );
+  }
+
   if (isEditing(editState)) {
     return (
       <div className={c('item-form')} ref={clickOutsideRef}>
